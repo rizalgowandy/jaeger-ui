@@ -119,7 +119,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
     return [];
   }
 
-  generatePlaceholder(placeHolder: string | JSX.Element) {
+  generatePlaceholder(placeHolder: string | React.ReactNode) {
     const { width } = this.props;
 
     return (
@@ -198,7 +198,7 @@ export class ServiceGraphImpl extends React.PureComponent<TProps> {
       </XYPlot>
     );
 
-    if (!loading) {
+    if (!loading && xDomain.length > 0) {
       GraphComponent = metricsData === null ? noDataComponent : Plot;
     }
 

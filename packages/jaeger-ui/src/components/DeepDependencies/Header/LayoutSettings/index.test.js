@@ -48,6 +48,31 @@ describe('LayoutSettings', () => {
     jest.clearAllMocks();
   });
 
+  it('uses value found in localStorage', () => {
+    localStorage.setItem(LayoutSettings.STORED_DENSITY_KEY, null);
+
+    const wrapper = getWrapper();
+
+    // Get the index of the default density option
+    const defaultDensityIdx = densityOptions.findIndex(option => option.option === props.density);
+
+    const radios = wrapper.find(Radio);
+    expect(Array.from(radios).findIndex(radio => radio.props.checked)).toBe(defaultDensityIdx);
+  });
+
+  it('records new selection in localStorage', () => {
+    localStorage.setItem(LayoutSettings.STORED_DENSITY_KEY, null);
+    const newIdx = 2;
+    const newDensity = densityOptions[newIdx].option;
+    getWrapper()
+      .find(Radio)
+      .at(newIdx)
+      .simulate('change', { target: { value: newDensity } });
+
+    // Ensure the value is recorded in localStorage
+    expect(localStorage.getItem(LayoutSettings.STORED_DENSITY_KEY)).toBe(newDensity);
+  });
+
   it('renders each densityOption', () => {
     const radios = getWrapper().find(Radio);
 
@@ -67,6 +92,7 @@ describe('LayoutSettings', () => {
   });
 
   it('no-ops if current density is selected', () => {
+    localStorage.setItem(LayoutSettings.STORED_DENSITY_KEY, null);
     getWrapper()
       .find(Radio)
       .at(densityIdx)
@@ -76,25 +102,15 @@ describe('LayoutSettings', () => {
   });
 
   it('renders showOperations checkbox', () => {
-    expect(
-      getWrapper()
-        .find(Checkbox)
-        .prop('checked')
-    ).toBe(props.showOperations);
+    expect(getWrapper().find(Checkbox).prop('checked')).toBe(props.showOperations);
 
     const showOperations = !props.showOperations;
-    expect(
-      getWrapper({ showOperations })
-        .find(Checkbox)
-        .prop('checked')
-    ).toBe(showOperations);
+    expect(getWrapper({ showOperations }).find(Checkbox).prop('checked')).toBe(showOperations);
   });
 
   it('toggles showOperation and tracks its toggle', () => {
     const checked = !props.showOperations;
-    getWrapper()
-      .find(Checkbox)
-      .simulate('change', { target: { checked } });
+    getWrapper().find(Checkbox).simulate('change', { target: { checked } });
 
     expect(props.toggleShowOperations).toHaveBeenCalledWith(checked);
     expect(trackToggleShowOpSpy).toHaveBeenCalledWith(checked);

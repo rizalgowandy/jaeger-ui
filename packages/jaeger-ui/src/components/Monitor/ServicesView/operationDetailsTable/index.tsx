@@ -13,7 +13,10 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Row, Table, Progress, Button, Icon, Tooltip } from 'antd';
+import isEqual from 'lodash/isEqual';
+import isArray from 'lodash/isArray';
+import { Table, Progress, Button, Tooltip, Col } from 'antd';
+import { IoInformationCircleOutline } from 'react-icons/io5';
 import REDGraph from './opsGraph';
 import LoadingIndicator from '../../../common/LoadingIndicator';
 import { MetricsReduxState, ServiceOpsMetrics } from '../../../../types/metrics';
@@ -21,19 +24,34 @@ import prefixUrl from '../../../../utils/prefix-url';
 
 import './index.css';
 import { convertTimeUnitToShortTerm, convertToTimeUnit, getSuitableTimeUnit } from '../../../../utils/date';
+import { trackSortOperations, trackViewTraces } from './index.track';
 
 type TProps = {
   data: ServiceOpsMetrics[] | undefined;
   error: MetricsReduxState['opsError'];
-  loading: boolean | null;
+  loading: boolean | undefined;
   endTime: number;
   lookback: number;
   serviceName: string;
 };
 
+type TSortingState = {
+  columnKey?: React.Key;
+  order?: string | null;
+};
+
 type TState = {
   hoveredRowKey: number;
+  tableSorting: TSortingState[];
 };
+
+const tableTitles = new Map([
+  ['name', 'Name'],
+  ['latency', 'P95 Latency'],
+  ['requests', 'Request rate'],
+  ['errRates', 'Error rate'],
+  ['impact', 'Impact'],
+]);
 
 function formatValue(value: number) {
   if (value < 0.1) {
@@ -51,8 +69,14 @@ function formatTimeValue(value: number) {
   return `${formattedTime}${convertTimeUnitToShortTerm(timeUnit)}`;
 }
 export class OperationTableDetails extends React.PureComponent<TProps, TState> {
-  state = {
+  state: TState = {
     hoveredRowKey: -1,
+    tableSorting: [
+      {
+        order: 'descend',
+        columnKey: 'impact',
+      },
+    ],
   };
 
   render() {
@@ -68,14 +92,14 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
 
     const columnConfig = [
       {
-        title: 'Name',
+        title: tableTitles.get('name'),
         className: 'header-item',
         dataIndex: 'name',
         key: 'name',
         sorter: (a: ServiceOpsMetrics, b: ServiceOpsMetrics) => a.name.localeCompare(b.name),
       },
       {
-        title: 'P95 Latency',
+        title: tableTitles.get('latency'),
         className: 'header-item',
         dataIndex: 'latency',
         key: 'latency',
@@ -88,15 +112,13 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
               error={error.opsLatencies}
             />
             <div className="table-graph-avg">
-              {typeof value === 'number' && row.dataPoints.service_operation_latencies.length > 0
-                ? formatTimeValue(value * 1000)
-                : ''}
+              {row.dataPoints.service_operation_latencies.length > 0 ? formatTimeValue(value * 1000) : ''}
             </div>
           </div>
         ),
       },
       {
-        title: 'Request rate',
+        title: tableTitles.get('requests'),
         className: 'header-item',
         dataIndex: 'requests',
         key: 'requests',
@@ -109,15 +131,13 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
               error={error.opsCalls}
             />
             <div className="table-graph-avg">
-              {typeof value === 'number' && row.dataPoints.service_operation_call_rate.length > 0
-                ? `${formatValue(value)} req/s`
-                : ''}
+              {row.dataPoints.service_operation_call_rate.length > 0 ? `${formatValue(value)} req/s` : ''}
             </div>
           </div>
         ),
       },
       {
-        title: 'Error rate',
+        title: tableTitles.get('errRates'),
         className: 'header-item',
         dataIndex: 'errRates',
         key: 'errRates',
@@ -131,9 +151,7 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
               error={error.opsErrors}
             />
             <div className="table-graph-avg">
-              {typeof value === 'number' && row.dataPoints.service_operation_error_rate.length > 0
-                ? `${formatValue(value * 100)}%`
-                : ''}
+              {row.dataPoints.service_operation_error_rate.length > 0 ? `${formatValue(value * 100)}%` : ''}
             </div>
           </div>
         ),
@@ -142,13 +160,13 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
         title: (
           <div style={{ paddingTop: 1 }}>
             <span style={{ float: 'left', color: '#459798' }}>
-              Impact &nbsp;
+              {tableTitles.get('impact')} &nbsp;
               <Tooltip
                 overlayClassName="impact-tooltip"
                 placement="top"
                 title="The result of multiplying avg. duration and requests per minute, showing the most used and slowest endpoints"
               >
-                <Icon type="info-circle" />
+                <IoInformationCircleOutline />
               </Tooltip>
             </span>
           </div>
@@ -165,38 +183,38 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
             viewTraceButton = (
               <Button
                 href={prefixUrl(
-                  `/search?end=${endTime}000&limit=20&lookback=${lookback /
-                    (3600 * 1000)}h&maxDuration&minDuration&operation=${encodeURIComponent(
+                  `/search?end=${endTime}000&limit=20&lookback=${
+                    lookback / (3600 * 1000)
+                  }h&maxDuration&minDuration&operation=${encodeURIComponent(
                     row.name
                   )}&service=${serviceName}&start=${endTime - lookback}000`
                 )}
                 target="blank"
+                onClick={() => trackViewTraces(row.name)}
               >
                 View traces
               </Button>
             );
           }
 
-          return {
-            children: (
-              <div className="column-container">
-                <Progress
-                  className="impact"
-                  percent={value * 100}
-                  strokeLinecap="square"
-                  strokeColor="#459798"
-                  showInfo={false}
-                />
-                <div className="view-trace-button">{viewTraceButton}</div>
-              </div>
-            ),
-          };
+          return (
+            <div className="column-container">
+              <Progress
+                className="impact"
+                percent={value * 100}
+                strokeLinecap="square"
+                strokeColor="#459798"
+                showInfo={false}
+              />
+              <div className="view-trace-button">{viewTraceButton}</div>
+            </div>
+          );
         },
       },
     ];
 
     return (
-      <Row>
+      <Col span={24}>
         <Table
           rowClassName={() => 'table-row'}
           columns={columnConfig}
@@ -216,8 +234,22 @@ export class OperationTableDetails extends React.PureComponent<TProps, TState> {
               },
             };
           }}
+          onChange={(pagination, filters, sorter) => {
+            const activeSorters = isArray(sorter) ? sorter : [sorter];
+            const { tableSorting } = this.state;
+
+            if (!isEqual(activeSorters, tableSorting)) {
+              const lastColumn =
+                activeSorters[activeSorters.length - 1] ?? tableSorting[tableSorting.length - 1];
+              const lastColumnKey = lastColumn.columnKey as string;
+              const clickedColumn = tableTitles.get(lastColumnKey);
+
+              trackSortOperations(clickedColumn!);
+              this.setState({ tableSorting: activeSorters });
+            }
+          }}
         />
-      </Row>
+      </Col>
     );
   }
 }

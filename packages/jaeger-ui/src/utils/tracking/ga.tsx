@@ -13,31 +13,54 @@
 // limitations under the License.
 
 import _get from 'lodash/get';
-import queryString from 'query-string';
-import ReactGA from 'react-ga';
-import Raven, { RavenOptions, RavenTransportOptions } from 'raven-js';
+import {
+  Event,
+  BrowserClient,
+  breadcrumbsIntegration,
+  captureException,
+  init as SentryInit,
+} from '@sentry/browser';
 
-import convRavenToGa from './conv-raven-to-ga';
+import convSentryToGa from './conv-sentry-to-ga';
 import { TNil } from '../../types';
 import { Config } from '../../types/config';
 import { IWebAnalyticsFunc } from '../../types/tracking';
-import { logTrackingCalls } from './utils';
+import { getAppEnvironment, shouldDebugGoogleAnalytics } from '../constants';
+import parseQuery from '../parseQuery';
+
+// Modify the `window` object to have an additional attribute `dataLayer`
+// This is required by the gtag.js script to work
+
+// eslint-disable-next-line @typescript-eslint/naming-convention
+interface WindowWithGATracking extends Window {
+  dataLayer: (string | object)[][] | undefined;
+}
+
+function convertEventToTransportOptions(event: Event): { url: string; data: any } {
+  return {
+    url: event.request?.url || '',
+    data: event,
+  };
+}
+
+declare let window: WindowWithGATracking;
 
 const isTruish = (value?: string | string[]) => {
   return Boolean(value) && value !== '0' && value !== 'false';
 };
 
 const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong: string) => {
-  const isProd = process.env.NODE_ENV === 'production';
-  const isDev = process.env.NODE_ENV === 'development';
-  const isTest = process.env.NODE_ENV === 'test';
+  const appEnv = getAppEnvironment();
+  const isProd = appEnv === 'production';
+  const isDev = appEnv === 'development';
+  const isTest = appEnv === 'test';
   const isDebugMode =
-    (isDev && isTruish(process.env.REACT_APP_GA_DEBUG)) ||
-    isTruish(queryString.parse(_get(window, 'location.search'))['ga-debug']);
+    (isDev && isTruish(shouldDebugGoogleAnalytics())) ||
+    isTruish(parseQuery(_get(window, 'location.search'))['ga-debug']);
   const gaID = _get(config, 'tracking.gaID');
   const isErrorsEnabled = isDebugMode || Boolean(_get(config, 'tracking.trackErrors'));
   const cookiesToDimensions = _get(config, 'tracking.cookiesToDimensions');
-  const context = isErrorsEnabled ? Raven : (null as any);
+  const context = isErrorsEnabled ? BrowserClient : null;
   const EVENT_LENGTHS = {
     action: 499,
     category: 149,
@@ -48,16 +71,29 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
     return isTest || isDebugMode || (isProd && Boolean(gaID));
   };
 
+  // Function to add a new event to the Google Analytics dataLayer
+  const gtag = (...args: (string | object)[]) => {
+    if (window !== undefined)
+      if (window.dataLayer !== undefined && Array.isArray(window.dataLayer)) {
+        window.dataLayer.push(args);
+        if (isDebugMode) {
+          // eslint-disable-next-line no-console
+          console.log('[GA Tracking]', ...args);
+        }
+      }
+  };
+
   const trackError = (description: string) => {
     let msg = description;
     if (!/^jaeger/i.test(msg)) {
       msg = `jaeger/${msg}`;
     }
     msg = msg.slice(0, 149);
-    ReactGA.exception({ description: msg, fatal: false });
-    if (isDebugMode) {
-      logTrackingCalls();
-    }
+
+    gtag('event', 'exception', {
+      description: msg,
+      fatal: false,
+    });
   };
 
   const trackEvent = (
@@ -88,14 +124,16 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
     if (value != null) {
       event.value = Math.round(value);
     }
-    ReactGA.event(event);
-    if (isDebugMode) {
-      logTrackingCalls();
-    }
+
+    gtag('event', event.action, {
+      event_category: event.category,
+      ...(event.label && { event_label: event.label }),
+      ...(event.value && { event_value: event.value }),
+    });
   };
 
-  const trackRavenError = (ravenData: RavenTransportOptions) => {
-    const { message, category, action, label, value } = convRavenToGa(ravenData);
+  const trackSentryError = (sentryData: { url: string; data: any }) => {
+    const { message, category, action, label, value } = convSentryToGa(sentryData);
     trackError(message);
     trackEvent(category, action, label, value);
   };
@@ -105,55 +143,74 @@ const GA: IWebAnalyticsFunc = (config: Config, versionShort: string, versionLong
       return;
     }
 
-    const gaConfig = { testMode: isTest || isDebugMode, titleCase: false, debug: true };
-    ReactGA.initialize(gaID || 'debug-mode', gaConfig);
-    ReactGA.set({
+    const gtagUrl = 'https://www.googletagmanager.com/gtag/js';
+    const GA_MEASUREMENT_ID = gaID || 'debug-mode';
+
+    // Load the script asynchronously
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `${gtagUrl}?id=${GA_MEASUREMENT_ID}`;
+    document.body.appendChild(script);
+
+    // Initialize the dataLayer and send initial configuration data
+    window.dataLayer = window.dataLayer || [];
+    gtag('js', new Date());
+    gtag('config', GA_MEASUREMENT_ID);
+    gtag('set', {
       appId: 'github.com/jaegertracing/jaeger-ui',
       appName: 'Jaeger UI',
       appVersion: versionLong,
     });
+
     if (cookiesToDimensions !== undefined) {
-      ((cookiesToDimensions as unknown) as Array<{ cookie: string; dimension: string }>).forEach(
+      (cookiesToDimensions as unknown as Array<{ cookie: string; dimension: string }>).forEach(
         ({ cookie, dimension }: { cookie: string; dimension: string }) => {
           const match = ` ${document.cookie}`.match(new RegExp(`[; ]${cookie}=([^\\s;]*)`));
-          if (match) ReactGA.set({ [dimension]: match[1] });
+          if (match) {
+            gtag('set', {
+              [dimension]: match[1],
+            });
+          }
           // eslint-disable-next-line no-console
           else console.warn(`${cookie} not present in cookies, could not set dimension: ${dimension}`);
         }
       );
     }
     if (isErrorsEnabled) {
-      const ravenConfig: RavenOptions = {
-        autoBreadcrumbs: {
-          xhr: true,
-          console: false,
-          dom: true,
-          location: true,
+      SentryInit({
+        dsn: 'https://fakedsn@omg.com/1',
+        environment: getAppEnvironment() || 'unknown',
+        integrations: [
+          breadcrumbsIntegration({
+            xhr: true,
+            console: false,
+            dom: true,
+          }),
+        ],
+        beforeSend(event) {
+          const transportOptions = convertEventToTransportOptions(event);
+          trackSentryError(transportOptions);
+          return event;
         },
-        environment: process.env.NODE_ENV || 'unkonwn',
-        transport: trackRavenError,
+        ...(versionShort &&
+          versionShort !== 'unknown' && {
+            tags: {
+              git: versionShort,
+            },
+          }),
+      });
+
+      window.onunhandledrejection = function trackRejectedPromise(evt) {
+        captureException(evt.reason);
       };
-      if (versionShort && versionShort !== 'unknown') {
-        ravenConfig.tags = {
-          git: versionShort,
-        };
-      }
-      Raven.config('https://fakedsn@omg.com/1', ravenConfig).install();
-      window.onunhandledrejection = function trackRejectedPromise(evt: PromiseRejectionEvent) {
-        Raven.captureException(evt.reason);
-      };
-    }
-    if (isDebugMode) {
-      logTrackingCalls();
     }
   };
 
   const trackPageView = (pathname: string, search: string | TNil) => {
     const pagePath = search ? `${pathname}${search}` : pathname;
-    ReactGA.pageview(pagePath);
-    if (isDebugMode) {
-      logTrackingCalls();
-    }
+    gtag('event', 'page_view', {
+      page_path: pagePath,
+    });
   };
 
   return {

@@ -25,6 +25,7 @@ jest.mock('./TracePageHeader/SpanGraph');
 jest.mock('./TracePageHeader/TracePageHeader.track');
 jest.mock('./TracePageHeader/TracePageSearchBar');
 jest.mock('./TraceTimelineViewer');
+jest.mock('./CriticalPath/index');
 
 import React from 'react';
 import sinon from 'sinon';
@@ -81,8 +82,6 @@ describe('makeShortcutCallbacks()', () => {
 });
 
 describe('<TracePage>', () => {
-  TraceTimelineViewer.prototype.shouldComponentUpdate.mockReturnValue(false);
-
   const trace = transformTraceData(traceGenerator.trace({}));
   const defaultProps = {
     acknowledgeArchive: () => {},
@@ -401,8 +400,12 @@ describe('<TracePage>', () => {
       it('is true when not embedded and archive is enabled', () => {
         [{ timeline: {} }, undefined].forEach(embedded => {
           [true, false].forEach(archiveEnabled => {
-            wrapper.setProps({ embedded, archiveEnabled });
-            expect(wrapper.find(TracePageHeader).prop('showArchiveButton')).toBe(!embedded && archiveEnabled);
+            [{ archiveStorage: false }, { archiveStorage: true }].forEach(storageCapabilities => {
+              wrapper.setProps({ embedded, archiveEnabled, storageCapabilities });
+              expect(wrapper.find(TracePageHeader).prop('showArchiveButton')).toBe(
+                !embedded && archiveEnabled && storageCapabilities.archiveStorage
+              );
+            });
           });
         });
       });
@@ -727,9 +730,7 @@ describe('mapStateToProps()', () => {
   const trace = {};
   const embedded = 'a-faux-embedded-config';
   const ownProps = {
-    match: {
-      params: { id: traceID },
-    },
+    params: { id: traceID },
   };
   let state;
   beforeEach(() => {
@@ -765,10 +766,8 @@ describe('mapStateToProps()', () => {
 
   it('handles falsy ownProps.match.params.id', () => {
     const props = mapStateToProps(state, {
-      match: {
-        params: {
-          id: '',
-        },
+      params: {
+        id: '',
       },
     });
     expect(props).toEqual(
@@ -791,6 +790,22 @@ describe('mapStateToProps()', () => {
       archiveTraceState: undefined,
       searchUrl: fakeUrl,
       trace: { data: {}, state: fetchedState.DONE },
+    });
+  });
+
+  it('propagates layoutManagerMemory correctly', () => {
+    const fakeMemory = 123;
+    state.config.traceGraph = { layoutManagerMemory: fakeMemory };
+    const props = mapStateToProps(state, ownProps);
+    expect(props).toEqual({
+      id: traceID,
+      embedded,
+      archiveEnabled: false,
+      archiveTraceState: undefined,
+      searchUrl: null,
+      uiFind: undefined,
+      trace: { data: {}, state: fetchedState.DONE },
+      traceGraphConfig: { layoutManagerMemory: fakeMemory },
     });
   });
 });

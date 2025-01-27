@@ -1,10 +1,417 @@
 # Releases
 
-## Next (unreleased)
+<details>
+<summary>next release template</summary>
+
+## v1.xx.0 (202x-xx-xx)
+
+Run `make changelog` to generate content.
+
+</details>
+
+## v1.65.0 (2025-01-08)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* [clean-up]: remove deprecated plexus/directedgraph ([@hari45678](https://github.com/hari45678) in [#2548](https://github.com/jaegertracing/jaeger-ui/pull/2548))
+* [fix]: make plexus demo work again ([@hari45678](https://github.com/hari45678) in [#2538](https://github.com/jaegertracing/jaeger-ui/pull/2538))
+* Upgrade from raven-js to sentry/browser ([@avinpy-255](https://github.com/avinpy-255) in [#2509](https://github.com/jaegertracing/jaeger-ui/pull/2509))
+
+## v1.64.0 (2024-12-06)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Add new formatting function "add" ([@drewcorlin1](https://github.com/drewcorlin1) in [#2507](https://github.com/jaegertracing/jaeger-ui/pull/2507))
+* Add pad_start link formatting function #2505 ([@drewcorlin1](https://github.com/drewcorlin1) in [#2504](https://github.com/jaegertracing/jaeger-ui/pull/2504))
+* Allow formatting link parameter values as iso date #2487 ([@drewcorlin1](https://github.com/drewcorlin1) in [#2501](https://github.com/jaegertracing/jaeger-ui/pull/2501))
+
+## v1.63.0 (2024-11-10)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Migrate from yarn v1 to npm ([@andreasgerstmayr](https://github.com/andreasgerstmayr) in [#2462](https://github.com/jaegertracing/jaeger-ui/pull/2462))
+
+#### 👷 CI Improvements
+
+* Run s390x build on push to main only ([@andreasgerstmayr](https://github.com/andreasgerstmayr) in [#2481](https://github.com/jaegertracing/jaeger-ui/pull/2481))
+
+## v1.62.0 (2024-10-06)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Support uploads of .jsonl files ([@Saumya40-codes](https://github.com/Saumya40-codes) in [#2461](https://github.com/jaegertracing/jaeger-ui/pull/2461))
+
+## v1.61.0 (2024-09-14)
+
+Dependencies updates only.
+
+## v1.60.0 (2024-08-05)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Allow uploading json-per-line otlp data ([@BenzeneAlcohol](https://github.com/BenzeneAlcohol) in [#2380](https://github.com/jaegertracing/jaeger-ui/pull/2380))
+
+## v1.59.0 (2024-07-09)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Add escaped example to tag search help popup ([@yurishkuro](https://github.com/yurishkuro) in [#2354](https://github.com/jaegertracing/jaeger-ui/pull/2354))
+
+## v1.58.0 (2024-06-11)
+
+#### 🐞 Bug fixes, Minor Improvements
+
+* Document how to debug unit tests in vscode ([@RISHIKESHk07](https://github.com/RISHIKESHk07) in [#2297](https://github.com/jaegertracing/jaeger-ui/pull/2297))
+
+#### 👷 CI Improvements
+
+* Github actions added to block prs from fork/main branch ([@varshith257](https://github.com/varshith257) in [#2296](https://github.com/jaegertracing/jaeger-ui/pull/2296))
+
+## v1.57.0 (2024-05-01)
+
+Note: the version has been bumped to be inline with the backend.
+
+More details: https://github.com/jaegertracing/jaeger/issues/5323
+
+### 🐞 Bug fixes, Minor Improvements
+
+* Improve trace page title with data and unique emoji (fixes #2256) ([@nox](https://github.com/nox) in [#2275](https://github.com/jaegertracing/jaeger-ui/pull/2275))
+* Require node version 20+ ([@Baalekshan](https://github.com/Baalekshan) in [#2274](https://github.com/jaegertracing/jaeger-ui/pull/2274))
+
+## v1.40.0 (2024-04-02)
+
+### 🐞 Bug fixes, Minor Improvements
+
+* Fix html code for apostrophe ([@yurishkuro](https://github.com/yurishkuro) in [#2224](https://github.com/jaegertracing/jaeger-ui/pull/2224))
+* Make scatterplot y-axis margin wider to fit longer durations ([@tico88612](https://github.com/tico88612) in [#2211](https://github.com/jaegertracing/jaeger-ui/pull/2211))
+* Fix upload file into search page unnecessary post ([@tico88612](https://github.com/tico88612) in [#2200](https://github.com/jaegertracing/jaeger-ui/pull/2200))
+
+### 👷 CI Improvements
+
+* Feat: add `depcheck 1.4.7` in `package.json` ([@tico88612](https://github.com/tico88612) in [#2202](https://github.com/jaegertracing/jaeger-ui/pull/2202))
+
+## v1.39.0 (2024-03-04)
+
+### ✨ New Features:
+
+* Support uploading traces in opentelemetry format (otlp json) ([@NavinShrinivas](https://github.com/NavinShrinivas) in [#2145](https://github.com/jaegertracing/jaeger-ui/pull/2145))
+
+### 🐞 Bug fixes, Minor Improvements:
+
+* Gracefully handle spans without logs field ([@MaXal](https://github.com/MaXal) in [#2191](https://github.com/jaegertracing/jaeger-ui/pull/2191))
+* Prevent keyvaluetable copy column from wrapping ([@bobrik](https://github.com/bobrik) in [#2181](https://github.com/jaegertracing/jaeger-ui/pull/2181))
+* Use json for table values only for objects ([@bobrik](https://github.com/bobrik) in [#2168](https://github.com/jaegertracing/jaeger-ui/pull/2168))
+
+## v1.38.0 (2024-02-06)
+
+### ✨ New Features:
+
+* [feature]: add zoom in/out controls to plexus graphs ([@Wise-Wizard](https://github.com/Wise-Wizard) in [#2072](https://github.com/jaegertracing/jaeger-ui/pull/2072))
+
+### 🐞 Bug fixes, Minor Improvements:
+
+* Use import from /dist/ instead of symlink ([@zacanger](https://github.com/zacanger) in [#2135](https://github.com/jaegertracing/jaeger-ui/pull/2135))
+
+## v1.37.0 (2024-01-08)
+
+### ✨ New Features:
+
+* Replace implementation of DAG view with Plexus's Digraph ([@prathamesh-mutkure](https://github.com/prathamesh-mutkure) in [#1981](https://github.com/jaegertracing/jaeger-ui/pull/1981))
+* Support sticky configuration for deep dependency graph ([@Wise-Wizard](https://github.com/Wise-Wizard) in [#2063](https://github.com/jaegertracing/jaeger-ui/pull/2063))
+
+### 🐞 Bug fixes, Minor Improvements:
+
+* Add exact phrase search syntax help ([@kshmidt-digma](https://github.com/kshmidt-digma) in [#2028](https://github.com/jaegertracing/jaeger-ui/pull/2028))
+* Fix broken hot reload of plexus package ([@Wise-Wizard](https://github.com/Wise-Wizard) in [#2089](https://github.com/jaegertracing/jaeger-ui/pull/2089))
+* Feat: remove `is-promise` library ([@EshaanAgg](https://github.com/EshaanAgg) in [#2080](https://github.com/jaegertracing/jaeger-ui/pull/2080))
+* Feat: remove `reactga` and migrate to `ga4` for tracking ([@EshaanAgg](https://github.com/EshaanAgg) in [#2071](https://github.com/jaegertracing/jaeger-ui/pull/2071))
+* Chore: import only lodash submodules ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#2041](https://github.com/jaegertracing/jaeger-ui/pull/2041))
+* Replace reselect with memoize ([@cooleditphoto](https://github.com/cooleditphoto) in [#2042](https://github.com/jaegertracing/jaeger-ui/pull/2042))
+
+### 👷 CI Improvements:
+
+* Setup ossf scorecard workflow ([@mmorel-35](https://github.com/mmorel-35) in [#2096](https://github.com/jaegertracing/jaeger-ui/pull/2096))
+* Ci: simplify check-label workflow ([@EshaanAgg](https://github.com/EshaanAgg) in [#2068](https://github.com/jaegertracing/jaeger-ui/pull/2068))
+* Fix: fix some linting warnings ([@EshaanAgg](https://github.com/EshaanAgg) in [#2064](https://github.com/jaegertracing/jaeger-ui/pull/2064))
+
+## v1.36.0 (2023-12-05)
+
+### ✨ New Features:
+
+* [SPM] Add span kind selector ([@albertteoh](https://github.com/albertteoh) in [#2012](https://github.com/jaegertracing/jaeger-ui/pull/2012))
+* Make ArchiveTrace button auto-configurable ([@thecoons](https://github.com/thecoons) in [#1944](https://github.com/jaegertracing/jaeger-ui/pull/1944))
+
+### 🐞 Bug fixes, Minor Improvements:
+
+* Speed up trace statistics view calculation ([@maxgaponov](https://github.com/maxgaponov) in [#1941](https://github.com/jaegertracing/jaeger-ui/pull/1941))
+* Exit `mergeChildrenCriticalPath` early for an empty critical path ([@maxgaponov](https://github.com/maxgaponov) in [#1974](https://github.com/jaegertracing/jaeger-ui/pull/1974))
+* Add link to faq explaining why service map is empty ([@yurishkuro](https://github.com/yurishkuro) in [#1963](https://github.com/jaegertracing/jaeger-ui/pull/1963))
+
+### 👷 CI Improvements:
+
+* Change vite config from cjs to esm ([@ShivamMadlani](https://github.com/ShivamMadlani) in [#1992](https://github.com/jaegertracing/jaeger-ui/pull/1992))
+* Restore scripts/get-tracking-version.js deleted by accident ([@yurishkuro](https://github.com/yurishkuro) in [#1998](https://github.com/jaegertracing/jaeger-ui/pull/1998))
+
+
+## v1.35.0 (2023-11-02)
+
+### ✨ New Features:
+
+* Add tooltip when hovering critical path ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1871](https://github.com/jaegertracing/jaeger-ui/pull/1871))
+* Added tooltip when hovered on header column of tracestatistics view ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1902](https://github.com/jaegertracing/jaeger-ui/pull/1902))
+
+### 🐞 Bug fixes, Minor Improvements:
+
+* Upgrade ant-design to v5.x ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1907](https://github.com/jaegertracing/jaeger-ui/pull/1907))
+* [refactor]: enhancement to selftime calculation logic in tracestatistics view ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1901](https://github.com/jaegertracing/jaeger-ui/pull/1901))
+* Fix: disregard malformed references pointing to the same span ([@zimv](https://github.com/zimv) in [#823](https://github.com/jaegertracing/jaeger-ui/pull/823))
+* Fix: add style for ioarrowforward ([@NineKama](https://github.com/NineKama) in [#1869](https://github.com/jaegertracing/jaeger-ui/pull/1869))
+* Replace deprecated ant-design props from referencebutton and keyvaluestable ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1864](https://github.com/jaegertracing/jaeger-ui/pull/1864))
+* Remove deprecated usages from antd dropdown, tooltip, and tab components ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1859](https://github.com/jaegertracing/jaeger-ui/pull/1859))
+* Replace deprecated visible prop of ant-design v3 with open prop of ant-design v4 ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1855](https://github.com/jaegertracing/jaeger-ui/pull/1855))
+* Replace deprecated usage of ant-design tabs component from searchtracepage ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1857](https://github.com/jaegertracing/jaeger-ui/pull/1857))
+
+### 👷 CI Improvements:
+
+* Ci: add the label-check workflow to verify changelog labels on each pr ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1897](https://github.com/jaegertracing/jaeger-ui/pull/1897))
+
+## v1.34.0 (2023-10-04)
 
 ### Enhancements
 
+- Handle Critical Path computation when child span starts before and ends after parent span. ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1780](https://github.com/jaegertracing/jaeger-ui/pull/1780))
+
 ### Fixes
+
+- Restore ability to search in select fields ([@prathamesh-mutkure](https://github.com/prathamesh-mutkure) in [#1805](https://github.com/jaegertracing/jaeger-ui/pull/1805))
+- Replace match.params with useparams hook ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1837](https://github.com/jaegertracing/jaeger-ui/pull/1837))
+- Add custom withrouteprops hoc for react-router-dom v6 migration ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1836](https://github.com/jaegertracing/jaeger-ui/pull/1836))
+- Remove unused icon ([@priyanshu-kun](https://github.com/priyanshu-kun) in [#1829](https://github.com/jaegertracing/jaeger-ui/pull/1829))
+- Improve tooltip for elasticsearch tag queries ([@pavolloffay](https://github.com/pavolloffay) in [#1809](https://github.com/jaegertracing/jaeger-ui/pull/1809))
+- Replace react-router-redux with redux-first-history ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1826](https://github.com/jaegertracing/jaeger-ui/pull/1826))
+- Fix all controversial icons. ([@priyanshu-kun](https://github.com/priyanshu-kun) in [#1824](https://github.com/jaegertracing/jaeger-ui/pull/1824))
+- Speed up tests locally by upto 45% ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1818](https://github.com/jaegertracing/jaeger-ui/pull/1818))
+- Priyanshu kun/clean any ([@priyanshu-kun](https://github.com/priyanshu-kun) in [#1814](https://github.com/jaegertracing/jaeger-ui/pull/1814))
+- Moment.js replaced with dayjs ([@prathamesh-mutkure](https://github.com/prathamesh-mutkure) in [#1738](https://github.com/jaegertracing/jaeger-ui/pull/1738))
+- Replaced all uncontroversial icons from various icon sets to io5 ([@priyanshu-kun](https://github.com/priyanshu-kun) in [#1771](https://github.com/jaegertracing/jaeger-ui/pull/1771))
+- Speed up ci unit-test workflow by 28% ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1804](https://github.com/jaegertracing/jaeger-ui/pull/1804))
+- Fix linting warnings for no-unused-vars, no-var-requires ([@priyanshu-kun](https://github.com/priyanshu-kun) in [#1800](https://github.com/jaegertracing/jaeger-ui/pull/1800))
+- Improve tooltip for tag search ([@yurishkuro](https://github.com/yurishkuro) in [#1799](https://github.com/jaegertracing/jaeger-ui/pull/1799))
+- Fix copyicon to receive reactnode instead of string ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1791](https://github.com/jaegertracing/jaeger-ui/pull/1791))
+- Refactor critical path code to prevent it from ever throwing exceptions ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1785](https://github.com/jaegertracing/jaeger-ui/pull/1785))
+- Print suggestion on fixing prettier-lint errors ([@yurishkuro](https://github.com/yurishkuro) in [#1783](https://github.com/jaegertracing/jaeger-ui/pull/1783))
+- Upgrade to node 18 ([@yurishkuro](https://github.com/yurishkuro) in [#1776](https://github.com/jaegertracing/jaeger-ui/pull/1776))
+- Extend try/catch for critical path ([@yurishkuro](https://github.com/yurishkuro) in [#1778](https://github.com/jaegertracing/jaeger-ui/pull/1778))
+- Convert utils/treenode.js and selectors/trace.js to typescript ([@yurishkuro](https://github.com/yurishkuro) in [#1777](https://github.com/jaegertracing/jaeger-ui/pull/1777))
+
+## v1.33.0 (2023-08-06)
+
+### Enhancements
+
+- [feature] Visualize Critical Path of a trace ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1582](https://github.com/jaegertracing/jaeger-ui/pull/1582))
+- Add JSON Folding Support in Logs ([@prathamesh-mutkure](https://github.com/prathamesh-mutkure) in [#1724](https://github.com/jaegertracing/jaeger-ui/pull/1724))
+- Recognize uninstrumented services via both producer and client span kinds ([@Wck-iipi](https://github.com/Wck-iipi) in [#1681](https://github.com/jaegertracing/jaeger-ui/pull/1681))
+
+### Fixes
+
+- fix: Make popup on the Search input field less intrusive enhancement ([@anikdhabal](https://github.com/anikdhabal) in [#1685](https://github.com/jaegertracing/jaeger-ui/pull/1685))
+- Resolves #1697 - Bug fix of popover not closing ([@jriyyya](https://github.com/jriyyya) in [#1705](https://github.com/jaegertracing/jaeger-ui/pull/1705))
+
+## v1.32.0 (2023-08-14)
+
+### Enhancements
+
+- Add text label to copy buttons on tags ([@Yushmanth-reddy](https://github.com/Yushmanth-reddy) in [#1547](https://github.com/jaegertracing/jaeger-ui/pull/1547))
+
+### Fixes
+
+- Migrate ScoreCard.test.js from Enzyme to React Shallow Renderer ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1653](https://github.com/jaegertracing/jaeger-ui/pull/1653))
+- Fix the tooltip position of copy value and JSON Buttton ([@anikdhabal](https://github.com/anikdhabal) in [#1650](https://github.com/jaegertracing/jaeger-ui/pull/1650))
+- Fix lint issues when bumping eslint-plugin-import ([@Kavinjsir](https://github.com/Kavinjsir) in [#1652](https://github.com/jaegertracing/jaeger-ui/pull/1652))
+- [deps] Remove @types/moment, @types/history and @types/classnames ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1637](https://github.com/jaegertracing/jaeger-ui/pull/1637))
+- Remove dependency on isomorphic-fetch ([@Yushmanth-reddy](https://github.com/Yushmanth-reddy) in [#1616](https://github.com/jaegertracing/jaeger-ui/pull/1616))
+- Fix flaky test causing spurious drops in code coverage ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1632](https://github.com/jaegertracing/jaeger-ui/pull/1632))
+- [deps] Remove @types/memoize-one dep ([@anshgoyalevil](https://github.com/anshgoyalevil) in [#1625](https://github.com/jaegertracing/jaeger-ui/pull/1625))
+
+## v1.31.0 (2023-07-05)
+
+### Enhancements
+
+- Add boolean property to config to prevent popups to a new page ([@Binrix](https://github.com/Binrix) in [#1521](https://github.com/jaegertracing/jaeger-ui/pull/1521))
+- Trace statistics table is now using antd Table component to fix visual design consistency ([@GLVSKiriti](https://github.com/GLVSKiriti) in [#1500](https://github.com/jaegertracing/jaeger-ui/pull/1500))
+- Add second copy icon for value only to make it easier to get tool tips ([@yurishkuro](https://github.com/yurishkuro) in [#1505](https://github.com/jaegertracing/jaeger-ui/pull/1505))
+- Escape keys/values when rendering JSON objects to fix some parsing and additional tests ([@yurishkuro](https://github.com/yurishkuro) in [#1498](https://github.com/jaegertracing/jaeger-ui/pull/1498))
+
+### Fixes
+
+- Bump lerna from 7.1.0 to 7.1.1 ([@dependabot](https://github.com/dependabot) in [#1529](https://github.com/jaegertracing/jaeger-ui/pull/1529))
+- Bump webpack from 5.87.0 to 5.88.1 ([@dependabot](https://github.com/dependabot) in [#1528](https://github.com/jaegertracing/jaeger-ui/pull/1528))
+- Bump terser from 5.18.0 to 5.18.2 ([@dependabot](https://github.com/dependabot) in [#1527](https://github.com/jaegertracing/jaeger-ui/pull/1527))
+- Bump typescript from 5.1.3 to 5.1.6 ([@dependabot](https://github.com/dependabot) in [#1530](https://github.com/jaegertracing/jaeger-ui/pull/1530))
+- Bump @typescript-eslint/parser from 5.59.11 to 5.60.1 ([@dependabot](https://github.com/dependabot) in [#1525](https://github.com/jaegertracing/jaeger-ui/pull/1525))
+- Bump lerna from 7.0.2 to 7.1.0 ([@dependabot](https://github.com/dependabot) in [#1523](https://github.com/jaegertracing/jaeger-ui/pull/1523))
+- Bump @typescript-eslint/eslint-plugin from 5.59.11 to 5.60.1 ([@dependabot](https://github.com/dependabot) in [#1522](https://github.com/jaegertracing/jaeger-ui/pull/1522))
+- Bump eslint from 8.42.0 to 8.43.0 ([@dependabot](https://github.com/dependabot) in [#1508](https://github.com/jaegertracing/jaeger-ui/pull/1508))
+- Bump lerna from 7.0.1 to 7.0.2 ([@dependabot](https://github.com/dependabot) in [#1504](https://github.com/jaegertracing/jaeger-ui/pull/1504))
+- Bump webpack from 5.86.0 to 5.87.0 ([@dependabot](https://github.com/dependabot) in [#1501](https://github.com/jaegertracing/jaeger-ui/pull/1501))
+- Bump lerna from 6.6.2 to 7.0.1 ([@dependabot](https://github.com/dependabot) in [#1492](https://github.com/jaegertracing/jaeger-ui/pull/1492))
+- Bump @typescript-eslint/eslint-plugin from 5.59.9 to 5.59.11 ([@dependabot](https://github.com/dependabot) in [#1495](https://github.com/jaegertracing/jaeger-ui/pull/1495))
+- Bump @types/react-dom from 18.2.4 to 18.2.5 ([@dependabot](https://github.com/dependabot) in [#1496](https://github.com/jaegertracing/jaeger-ui/pull/1496))
+- Bump terser from 5.17.7 to 5.18.0 ([@dependabot](https://github.com/dependabot) in [#1497](https://github.com/jaegertracing/jaeger-ui/pull/1497))
+- Escape keys/values when rendering JSON objects ([@yurishkuro](https://github.com/yurishkuro) in [#1498](https://github.com/jaegertracing/jaeger-ui/pull/1498))
+- Bump webpack-dev-server from 4.15.0 to 4.15.1 ([@dependabot](https://github.com/dependabot) in [#1488](https://github.com/jaegertracing/jaeger-ui/pull/1488))
+- Bump rollup-plugin-visualizer from 5.9.0 to 5.9.2 ([@dependabot](https://github.com/dependabot) in [#1486](https://github.com/jaegertracing/jaeger-ui/pull/1486))
+- Bump html-webpack-plugin from 5.5.1 to 5.5.3 ([@dependabot](https://github.com/dependabot) in [#1487](https://github.com/jaegertracing/jaeger-ui/pull/1487))
+- Bump @babel/preset-typescript from 7.21.5 to 7.22.5 ([@dependabot](https://github.com/dependabot) in [#1481](https://github.com/jaegertracing/jaeger-ui/pull/1481))
+- Bump @babel/preset-env from 7.22.4 to 7.22.5 ([@dependabot](https://github.com/dependabot) in [#1482](https://github.com/jaegertracing/jaeger-ui/pull/1482))
+- Bump @babel/eslint-parser from 7.21.8 to 7.22.5 ([@dependabot](https://github.com/dependabot) in [#1483](https://github.com/jaegertracing/jaeger-ui/pull/1483))
+- Bump @babel/core from 7.22.1 to 7.22.5 ([@dependabot](https://github.com/dependabot) in [#1484](https://github.com/jaegertracing/jaeger-ui/pull/1484))
+
+## v1.30.0 (2023-06-05)
+
+### Enhancements
+
+- Allow disabling file upload via site config ([@yurishkuro](https://github.com/yurishkuro) in [#1464](https://github.com/jaegertracing/jaeger-ui/pull/1464))
+
+- Support in-page-search in trace view on key=value pairs ([@bobrik](https://github.com/bobrik) in [#1391](https://github.com/jaegertracing/jaeger-ui/pull/1391))
+
+### Fixes
+
+- Bump webpack from 5.80.0 to 5.85.0 ([@dependabot](https://github.com/dependabot) in [#1457](https://github.com/jaegertracing/jaeger-ui/pull/1457))
+
+## v1.29.1 (2023-05-03)
+
+### Fixes
+
+- Fix format of a downloaded json file ([@Katarzyna-B](https://github.com/Katarzyna-B) in [#1306](https://github.com/jaegertracing/jaeger-ui/pull/1306))
+
+## v1.29.0 (2023-04-10)
+
+### Enhancements
+
+- Batch Download of traces ([@Katarzyna-B](https://github.com/Katarzyna-B) in [#1274](https://github.com/jaegertracing/jaeger-ui/pull/1274))
+- Render HTTP header tags as comma-separated strings ([@wjrogers](https://github.com/wjrogers) in [#1295](https://github.com/jaegertracing/jaeger-ui/pull/1295))
+- Rename tab from JSON File to Upload ([@yurishkuro](https://github.com/yurishkuro) in [#1308](https://github.com/jaegertracing/jaeger-ui/pull/1308))
+
+### Fixes
+
+- Bump webpack from 5.76.3 to 5.77.0 ([@dependabot](https://github.com/dependabot) in [#1320](https://github.com/jaegertracing/jaeger-ui/pull/1320))
+- Bump minimist from 1.2.0 to 1.2.8 ([@dependabot](https://github.com/dependabot) in [#1317](https://github.com/jaegertracing/jaeger-ui/pull/1317))
+- Bump eslint from 8.36.0 to 8.37.0 ([@dependabot](https://github.com/dependabot) in [#1316](https://github.com/jaegertracing/jaeger-ui/pull/1316))
+- Bump lerna from 6.5.1 to 6.6.1 ([@dependabot](https://github.com/dependabot) in [#1303](https://github.com/jaegertracing/jaeger-ui/pull/1303))
+- Update redux-form to 8.3.10 ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1314](https://github.com/jaegertracing/jaeger-ui/pull/1314))
+- Bump @svgr/babel-preset from 6.5.1 to 7.0.0 ([@dependabot](https://github.com/dependabot) in [#1301](https://github.com/jaegertracing/jaeger-ui/pull/1301))
+- Bump vite from 4.2.0 to 4.2.1 ([@dependabot](https://github.com/dependabot) in [#1287](https://github.com/jaegertracing/jaeger-ui/pull/1287))
+- Bump @svgr/babel-plugin-transform-svg-component from 6.5.1 to 7.0.0 ([@dependabot](https://github.com/dependabot) in [#1299](https://github.com/jaegertracing/jaeger-ui/pull/1299))
+- Bump terser from 5.16.6 to 5.16.8 ([@dependabot](https://github.com/dependabot) in [#1302](https://github.com/jaegertracing/jaeger-ui/pull/1302))
+- Bump webpack from 5.76.1 to 5.76.3 ([@dependabot](https://github.com/dependabot) in [#1297](https://github.com/jaegertracing/jaeger-ui/pull/1297))
+- Bump prettier from 2.8.4 to 2.8.7 ([@dependabot](https://github.com/dependabot) in [#1300](https://github.com/jaegertracing/jaeger-ui/pull/1300))
+- Bump webpack-dev-server from 4.11.1 to 4.13.0 ([@dependabot](https://github.com/dependabot) in [#1283](https://github.com/jaegertracing/jaeger-ui/pull/1283))
+- Bump vite from 4.1.4 to 4.2.0 ([@dependabot](https://github.com/dependabot) in [#1281](https://github.com/jaegertracing/jaeger-ui/pull/1281))
+- Bump typescript from 4.9.5 to 5.0.2 ([@dependabot](https://github.com/dependabot) in [#1282](https://github.com/jaegertracing/jaeger-ui/pull/1282))
+
+## v1.28.1 (2023-03-15)
+
+### Fixes
+
+- Workaround antd v3 error in the production build ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1276](https://github.com/jaegertracing/jaeger-ui/pull/1276))
+
+## v1.28.0 (2023-03-15)
+
+### Enhancements
+
+- Add totalMemory in config for trace graph ([@ChenX1993](https://github.com/ChenX1993) in [#1262](https://github.com/jaegertracing/jaeger-ui/pull/1262))
+- Make traceID, startTime, endTime, duration and traceName available or Link Patterns ([@MUI-Pop](https://github.com/MUI-Pop) in [#1178](https://github.com/jaegertracing/jaeger-ui/pull/1178))
+
+### Fixes
+
+- Update TypeScript and ESLint to latest versions ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1256](https://github.com/jaegertracing/jaeger-ui/pull/1256))
+- Update ESLint and related plugins ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1250](https://github.com/jaegertracing/jaeger-ui/pull/1250))
+- Expand docs about testing ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1251](https://github.com/jaegertracing/jaeger-ui/pull/1251))
+- Bump antd to 3.26.20 ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1247](https://github.com/jaegertracing/jaeger-ui/pull/1247))
+- Bump TypeScript to 3.8.3 ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1244](https://github.com/jaegertracing/jaeger-ui/pull/1244))
+- Migrate build tooling to Vite ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1226](https://github.com/jaegertracing/jaeger-ui/pull/1226))
+- Avoid use of require() in default-config.tsx ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1225](https://github.com/jaegertracing/jaeger-ui/pull/1225))
+- Abstract access to injected globals ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1224](https://github.com/jaegertracing/jaeger-ui/pull/1224))
+- Remove use of react-dimensions package in ScatterPlot component ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1223](https://github.com/jaegertracing/jaeger-ui/pull/1223))
+- Convert SearchResults and index components to TS ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1222](https://github.com/jaegertracing/jaeger-ui/pull/1222))
+- Make Plexus output ESM ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1219](https://github.com/jaegertracing/jaeger-ui/pull/1219))
+- Use .jsx file extension for JS components ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1218](https://github.com/jaegertracing/jaeger-ui/pull/1218))
+- Bump Plexus React typings to React 18 ([@mszabo-wikia](https://github.com/mszabo-wikia) in [#1210](https://github.com/jaegertracing/jaeger-ui/pull/1210))
+- Bump node-pre-gyp dependency ([@rubenvp8510](https://github.com/rubenvp8510) in [#1191](https://github.com/jaegertracing/jaeger-ui/pull/1191))
+- Prevent wrapping of the timeline tick label text ([@SOF3](https://github.com/SOF3) in [#1117](https://github.com/jaegertracing/jaeger-ui/pull/1117))
+- Upgrade to React 18 ([@Sergio-Mira](https://github.com/Sergio-Mira) in [#1173](https://github.com/jaegertracing/jaeger-ui/pull/1173))
+- Move alt view dropdown to a button ([@Sergio-Mira](https://github.com/Sergio-Mira) in [#1174](https://github.com/jaegertracing/jaeger-ui/pull/1174))
+- Fix warning about Autoprefixer prefix-less CSS ([@Sergio-Mira](https://github.com/Sergio-Mira) in [#1175](https://github.com/jaegertracing/jaeger-ui/pull/1175))
+
+## v1.27.3 (2022-12-07)
+
+### Fixes
+
+- Bump @babel/core from 7.20.2 to 7.20.5 ([@dependabot](https://github.com/dependabot) in [#1087](https://github.com/jaegertracing/jaeger-ui/pull/1087))
+- Bump lerna from 6.0.3 to 6.1.0 ([@dependabot](https://github.com/dependabot) in [#1093](https://github.com/jaegertracing/jaeger-ui/pull/1093))
+- Revert upgrade to viz.js, v2.1.2 -> v1.8.1 ([@yurishkuro](https://github.com/yurishkuro) in [#1082](https://github.com/jaegertracing/jaeger-ui/pull/1082))
+- Upgrade to antd/v3.9.0 to avoid loading fonts from alicdn ([@yurishkuro](https://github.com/yurishkuro) in [#1053](https://github.com/jaegertracing/jaeger-ui/pull/1053))
+- Upgrade more dependencies ([@yurishkuro](https://github.com/yurishkuro) in [#1057](https://github.com/jaegertracing/jaeger-ui/pull/1057))
+- Bump safe dependencies ([@yurishkuro](https://github.com/yurishkuro) in [#1045](https://github.com/jaegertracing/jaeger-ui/pull/1045))
+- Upgrade many dependencies part 2 ([@mmorel-35](https://github.com/mmorel-35) in [#1013](https://github.com/jaegertracing/jaeger-ui/pull/1013))
+
+## v1.27.2 (2022-11-01)
+
+### Fixes
+
+- babel : migrate to the top level setPublicClassFields assumption ([@mmorel-35](https://github.com/mmorel-35) in [#1008](https://github.com/jaegertracing/jaeger-ui/pull/1008))
+
+- Add documentation to config ([@yurishkuro](https://github.com/yurishkuro) in [#1007](https://github.com/jaegertracing/jaeger-ui/pull/1007))
+
+- Upgrade many dependencies ([@mmorel-35](https://github.com/mmorel-35) in [#1001](https://github.com/jaegertracing/jaeger-ui/pull/1001))
+
+- Update node version and use github-action for codecov ([@mmorel-35](https://github.com/mmorel-35) in [#997](https://github.com/jaegertracing/jaeger-ui/pull/997))
+
+## v1.27.1 (2022-10-04)
+
+### Fixes
+
+- Bump dependencies: set-value@^2.0.1 and y18n@v4.0.3
+
+## v1.27.0 (2022-09-15)
+
+### Enhancements
+
+- Flamegraph visualisation works with sub-second units ([@pavelpashkovsky](https://github.com/pavelpashkovsky) in [#986](https://github.com/jaegertracing/jaeger-ui/pull/986))
+- Add trace visualization as a FlameGraph ([@pavelpashkovsky](https://github.com/pavelpashkovsky) in [#976](https://github.com/jaegertracing/jaeger-ui/pull/976))
+
+## v1.26.0 (2022-08-03)
+
+### Enhancements
+
+- Add more selectable time ranges to the SPM UI ([@jgbernalp](https://github.com/jgbernalp) in [#971](https://github.com/jaegertracing/jaeger-ui/pull/971))
+
+## v1.25.0 (2022-07-03)
+
+### Enhancements
+
+- Store preferred span name column width in localStorage ([@bobrik](https://github.com/bobrik) in [#965](https://github.com/jaegertracing/jaeger-ui/pull/965))
+
+## v1.24.0 (2022-06-01)
+
+### Enhancements
+
+- Support new user analytics events in the Monitor Tab ([@VladislavBryukhanov](https://github.com/VladislavBryukhanov) in [#943](https://github.com/jaegertracing/jaeger-ui/pull/943))
+- Use red on scatterplot for traces if any spans have an error=true tag ([@esnible](https://github.com/esnible) in [#951](https://github.com/jaegertracing/jaeger-ui/pull/951))
+
+## v1.23.0 (2022-05-10)
+
+### Enhancements
+
+- Add error icon to errored services in trace list view ([@Jaskerv](https://github.com/Jaskerv) in [#927](https://github.com/jaegertracing/jaeger-ui/pull/927))
+
+### Fixes
+
+- Monitor tab - Fix monitor tab crashing ([@nofar9792](https://github.com/nofar9792) in [#946](https://github.com/jaegertracing/jaeger-ui/pull/946))
+- Monitor Tab - fix latencies graph ([@nofar9792](https://github.com/nofar9792) in [#934](https://github.com/jaegertracing/jaeger-ui/pull/934))
+- Fix service operations fetch by URL query params ([@FloydJohn](https://github.com/FloydJohn) in [#932](https://github.com/jaegertracing/jaeger-ui/pull/932))
+- Monitor tab - fix link to docs ([@FloydJohn](https://github.com/FloydJohn) in [#929](https://github.com/jaegertracing/jaeger-ui/pull/929))
 
 ## v1.22.0 (2022-04-11)
 

@@ -13,19 +13,16 @@
 // limitations under the License.
 
 import * as React from 'react';
-import { Row, Col, Input, Alert } from 'antd';
+import { Row, Col, Input, Alert, Select } from 'antd';
 import { ActionFunction, Action } from 'redux-actions';
+import _debounce from 'lodash/debounce';
 import _isEqual from 'lodash/isEqual';
 import _isEmpty from 'lodash/isEmpty';
-// @ts-ignore
-import { Field, formValueSelector, reduxForm } from 'redux-form';
 // @ts-ignore
 import store from 'store';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 import { Link } from 'react-router-dom';
-import VirtSelect from '../../common/VirtSelect';
-import reduxFormFieldAdapter from '../../../utils/redux-form-field-adapter';
 import * as jaegerApiActions from '../../../actions/jaeger-api';
 import ServiceGraph from './serviceGraph';
 import OperationTableDetails from './operationDetailsTable';
@@ -38,26 +35,37 @@ import {
   Points,
   ServiceMetricsObject,
   ServiceOpsMetrics,
+  spanKinds,
 } from '../../../types/metrics';
 import prefixUrl from '../../../utils/prefix-url';
 import { convertToTimeUnit, convertTimeUnitToShortTerm, getSuitableTimeUnit } from '../../../utils/date';
 
 import './index.css';
 import { getConfigValue } from '../../../utils/config/get-config';
+import {
+  trackSearchOperation,
+  trackSelectService,
+  trackSelectSpanKind,
+  trackSelectTimeframe,
+  trackViewAllTraces,
+} from './index.track';
+import withRouteProps from '../../../utils/withRouteProps';
+import SearchableSelect from '../../common/SearchableSelect';
 
 type StateType = {
   graphWidth: number;
   serviceOpsMetrics: ServiceOpsMetrics[] | undefined;
   searchOps: string;
   graphXDomain: number[];
+  selectedService: string;
+  selectedSpanKind: spanKinds;
+  selectedTimeFrame: number;
 };
 
 type TReduxProps = {
   services: string[];
   servicesLoading: boolean;
   metrics: MetricsReduxState;
-  selectedService: string;
-  selectedTimeFrame: number;
 };
 
 type TProps = TReduxProps & TDispatchProps;
@@ -68,22 +76,30 @@ type TDispatchProps = {
   fetchAllServiceMetrics: (serviceName: string, query: MetricsAPIQueryParams) => void;
 };
 
+const trackSearchOperationDebounced = _debounce(searchQuery => trackSearchOperation(searchQuery), 1000);
+
 const Search = Input.Search;
+const Option = Select.Option;
 
-const AdaptedVirtualSelect = reduxFormFieldAdapter({
-  AntInputComponent: VirtSelect,
-  onChangeAdapter: option => (option ? (option as any).value : null),
-});
-
-const serviceFormSelector = formValueSelector('serviceForm');
 const oneHourInMilliSeconds = 3600000;
-const timeFrameOptions = [
+const oneMinuteInMilliSeconds = 60000;
+export const timeFrameOptions = [
+  { label: 'Last 5 minutes', value: 5 * oneMinuteInMilliSeconds },
+  { label: 'Last 15 minutes', value: 15 * oneMinuteInMilliSeconds },
+  { label: 'Last 30 minutes', value: 30 * oneMinuteInMilliSeconds },
   { label: 'Last Hour', value: oneHourInMilliSeconds },
-  { label: 'Last 2 hour', value: 2 * oneHourInMilliSeconds },
-  { label: 'Last 6 hour', value: 6 * oneHourInMilliSeconds },
-  { label: 'Last 12 hour', value: 12 * oneHourInMilliSeconds },
+  { label: 'Last 2 hours', value: 2 * oneHourInMilliSeconds },
+  { label: 'Last 6 hours', value: 6 * oneHourInMilliSeconds },
+  { label: 'Last 12 hours', value: 12 * oneHourInMilliSeconds },
   { label: 'Last 24 hours', value: 24 * oneHourInMilliSeconds },
   { label: 'Last 2 days', value: 48 * oneHourInMilliSeconds },
+];
+export const spanKindOptions = [
+  { label: 'Client', value: 'client' },
+  { label: 'Server', value: 'server' },
+  { label: 'Internal', value: 'internal' },
+  { label: 'Producer', value: 'producer' },
+  { label: 'Consumer', value: 'consumer' },
 ];
 
 // export for tests
@@ -128,13 +144,16 @@ const convertServiceErrorRateToPercentages = (serviceErrorRate: null | ServiceMe
 export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, StateType> {
   docsLink: string;
   graphDivWrapper: React.RefObject<HTMLInputElement>;
-  serviceSelectorValue: string = '';
+  serviceSelectorValue = '';
   endTime: number = Date.now();
-  state = {
+  state: StateType = {
     graphWidth: 300,
     serviceOpsMetrics: undefined,
     searchOps: '',
     graphXDomain: [],
+    selectedService: store.get('lastAtmSearchService') || '',
+    selectedSpanKind: store.get('lastAtmSearchSpanKind') || 'server',
+    selectedTimeFrame: store.get('lastAtmSearchTimeframe') || oneHourInMilliSeconds,
   };
 
   constructor(props: TProps) {
@@ -155,16 +174,10 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
   }
 
   componentDidUpdate(prevProps: TProps) {
-    const { selectedService, selectedTimeFrame, services } = this.props;
+    const { services } = this.props;
 
-    if (prevProps.selectedService !== selectedService || prevProps.selectedTimeFrame !== selectedTimeFrame) {
+    if (!_isEqual(prevProps.services, services)) {
       this.fetchMetrics();
-    } else if (!_isEqual(prevProps.services, services)) {
-      this.fetchMetrics();
-    }
-
-    if (prevProps.selectedTimeFrame !== this.props.selectedTimeFrame) {
-      this.calcGraphXDomain();
     }
   }
 
@@ -174,9 +187,9 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
 
   calcGraphXDomain() {
     const currentTime = Date.now();
-    this.setState({
-      graphXDomain: [currentTime - this.props.selectedTimeFrame, currentTime],
-    });
+    this.setState(prevState => ({
+      graphXDomain: [currentTime - prevState.selectedTimeFrame, currentTime],
+    }));
   }
 
   updateDimensions() {
@@ -187,18 +200,38 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
     }
   }
 
+  handleServiceChange = (value: string) => {
+    this.setState({ selectedService: value }, () => {
+      trackSelectService(value);
+      this.fetchMetrics();
+    });
+  };
+
+  handleSpanKindChange = (value: string) => {
+    this.setState({ selectedSpanKind: value as spanKinds }, () => {
+      const { label } = spanKindOptions.find(option => option.value === value)!;
+      trackSelectSpanKind(label);
+      this.fetchMetrics();
+    });
+  };
+
+  handleTimeFrameChange = (value: number) => {
+    this.setState({ selectedTimeFrame: value }, () => {
+      const { label } = timeFrameOptions.find(option => option.value === value)!;
+      trackSelectTimeframe(label);
+      this.fetchMetrics();
+      this.calcGraphXDomain();
+    });
+  };
+
   fetchMetrics() {
-    const {
-      selectedService,
-      selectedTimeFrame,
-      fetchAllServiceMetrics,
-      fetchAggregatedServiceMetrics,
-      services,
-    } = this.props;
+    const { fetchAllServiceMetrics, fetchAggregatedServiceMetrics, services } = this.props;
+    const { selectedService, selectedSpanKind, selectedTimeFrame } = this.state;
     const currentService = selectedService || services[0];
 
     if (currentService) {
       this.endTime = Date.now();
+      store.set('lastAtmSearchSpanKind', selectedSpanKind);
       store.set('lastAtmSearchTimeframe', selectedTimeFrame);
       store.set('lastAtmSearchService', this.getSelectedService());
 
@@ -208,6 +241,7 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
         lookback: selectedTimeFrame,
         step: 60 * 1000,
         ratePer: 10 * 60 * 1000,
+        spanKind: selectedSpanKind,
       };
 
       fetchAllServiceMetrics(currentService, metricQueryPayload);
@@ -218,12 +252,14 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
   }
 
   getSelectedService() {
-    const { selectedService, services } = this.props;
+    const { services } = this.props;
+    const { selectedService } = this.state;
     return selectedService || store.get('lastAtmSearchService') || services[0];
   }
 
   render() {
-    const { services, metrics, selectedTimeFrame, servicesLoading } = this.props;
+    const { services, metrics, servicesLoading } = this.props;
+    const { selectedSpanKind, selectedTimeFrame, searchOps, graphWidth, graphXDomain } = this.state;
     const serviceLatencies = metrics.serviceMetrics ? metrics.serviceMetrics.service_latencies : null;
     const displayTimeUnit = calcDisplayTimeUnit(serviceLatencies);
     const serviceErrorRate = metrics.serviceMetrics ? metrics.serviceMetrics.service_error_rate : null;
@@ -256,54 +292,74 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
         <div className="service-view-container">
           <Row>
             <Col span={6}>
-              <h2 className="service-selector-header">Choose service</h2>
-              <Field
-                name="service"
-                component={AdaptedVirtualSelect}
+              <h2 className="service-selector-header">Service</h2>
+              <SearchableSelect
+                value={this.getSelectedService()}
+                onChange={this.handleServiceChange}
                 placeholder="Select A Service"
-                props={{
-                  className: 'select-a-service-input',
-                  value: this.getSelectedService(),
-                  disabled: metrics.operationMetricsLoading,
-                  clearable: false,
-                  options: services.map((s: string) => ({ label: s, value: s })),
-                  required: true,
-                }}
-              />
+                className="select-a-service-input"
+                disabled={metrics.operationMetricsLoading}
+                loading={metrics.operationMetricsLoading}
+              >
+                {services.map((service: string) => (
+                  <Option key={service} value={service}>
+                    {service}
+                  </Option>
+                ))}
+              </SearchableSelect>
+            </Col>
+            <Col span={6}>
+              <h2 className="span-kind-selector-header">Span Kind</h2>
+              <SearchableSelect
+                value={selectedSpanKind}
+                onChange={this.handleSpanKindChange}
+                placeholder="Select A Span Kind"
+                className="span-kind-selector"
+                disabled={metrics.operationMetricsLoading}
+                loading={metrics.operationMetricsLoading}
+              >
+                {spanKindOptions.map(option => (
+                  <Option key={option.value} value={option.value}>
+                    {option.label}
+                  </Option>
+                ))}
+              </SearchableSelect>
             </Col>
           </Row>
-          <Row>
+          <Row align="middle">
             <Col span={16}>
               <p className="operations-metrics-text">
                 Aggregation of all &quot;{this.getSelectedService()}&quot; metrics in selected timeframe.{' '}
                 <a
                   href={prefixUrl(
-                    `/search?end=${Date.now()}000&limit=20&lookback=${selectedTimeFrame /
-                      (3600 *
-                        1000)}h&maxDuration&minDuration&service=${this.getSelectedService()}&start=${Date.now() -
-                      selectedTimeFrame}000`
+                    `/search?end=${Date.now()}000&limit=20&lookback=${
+                      selectedTimeFrame / (3600 * 1000)
+                    }h&maxDuration&minDuration&service=${this.getSelectedService()}&start=${
+                      Date.now() - selectedTimeFrame
+                    }000`
                   )}
                   target="blank"
+                  onClick={trackViewAllTraces}
                 >
                   View all traces
                 </a>
               </p>
             </Col>
             <Col span={8} className="timeframe-selector">
-              <Field
-                name="timeframe"
-                component={AdaptedVirtualSelect}
+              <SearchableSelect
+                value={selectedTimeFrame}
+                onChange={this.handleTimeFrameChange}
                 placeholder="Select A Timeframe"
-                props={{
-                  className: 'select-a-timeframe-input',
-                  defaultValue: timeFrameOptions[0],
-                  value: selectedTimeFrame,
-                  disabled: metrics.operationMetricsLoading,
-                  clearable: false,
-                  options: timeFrameOptions,
-                  required: true,
-                }}
-              />
+                className="select-a-timeframe-input"
+                disabled={metrics.operationMetricsLoading}
+                loading={metrics.operationMetricsLoading}
+              >
+                {timeFrameOptions.map(option => (
+                  <Option key={option.value} value={option.value}>
+                    {option.label}
+                  </Option>
+                ))}
+              </SearchableSelect>
             </Col>
           </Row>
           <Row>
@@ -318,13 +374,13 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                 }
                 loading={metrics.loading}
                 name={`Latency (${convertTimeUnitToShortTerm(displayTimeUnit)})`}
-                width={this.state.graphWidth}
+                width={graphWidth}
                 metricsData={serviceLatencies}
                 showLegend
                 marginClassName="latency-margins"
                 showHorizontalLines
                 yAxisTickFormat={timeInMs => yAxisTickFormat(timeInMs, displayTimeUnit)}
-                xDomain={this.state.graphXDomain}
+                xDomain={graphXDomain}
               />
             </Col>
             <Col span={8}>
@@ -333,12 +389,12 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                 error={metrics.serviceError.service_error_rate}
                 loading={metrics.loading}
                 name="Error rate (%)"
-                width={this.state.graphWidth}
+                width={graphWidth}
                 metricsData={convertServiceErrorRateToPercentages(serviceErrorRate)}
                 marginClassName="error-rate-margins"
                 color="#CD513A"
                 yDomain={[0, 100]}
-                xDomain={this.state.graphXDomain}
+                xDomain={graphXDomain}
               />
             </Col>
             <Col span={8}>
@@ -347,56 +403,54 @@ export class MonitorATMServicesViewImpl extends React.PureComponent<TProps, Stat
                 loading={metrics.loading}
                 error={metrics.serviceError.service_call_rate}
                 name="Request rate (req/s)"
-                width={this.state.graphWidth}
+                width={graphWidth}
                 metricsData={metrics.serviceMetrics ? metrics.serviceMetrics.service_call_rate : null}
                 showHorizontalLines
                 color="#4795BA"
                 marginClassName="request-margins"
-                xDomain={this.state.graphXDomain}
+                xDomain={graphXDomain}
               />
             </Col>
           </Row>
           <Row className="operation-table-block">
-            <Row>
-              <Col span={16}>
-                <h2 className="table-header">Operations metrics under {this.getSelectedService()}</h2>{' '}
-                <span className="over-the-last">Over the {getLoopbackInterval(selectedTimeFrame)}</span>
-              </Col>
-              <Col span={8} className="select-operation-column">
-                <Search
-                  placeholder="Search operation"
-                  className="select-operation-input"
-                  value={this.state.searchOps}
-                  disabled={
-                    metrics.operationMetricsLoading === true || metrics.serviceOpsMetrics === undefined
-                  }
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    const filteredData = metrics.serviceOpsMetrics!.filter(({ name }: { name: string }) => {
-                      return name.toLowerCase().includes(e.target.value.toLowerCase());
-                    });
+            <Col span={16}>
+              <h2 className="table-header">Operations metrics under {this.getSelectedService()}</h2>{' '}
+              <span className="over-the-last">Over the {getLoopbackInterval(selectedTimeFrame)}</span>
+            </Col>
+            <Col span={8} className="select-operation-column">
+              <Search
+                placeholder="Search operation"
+                className="select-operation-input"
+                value={searchOps}
+                disabled={metrics.operationMetricsLoading === true || metrics.serviceOpsMetrics === undefined}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  const filteredData = metrics.serviceOpsMetrics!.filter(({ name }: { name: string }) => {
+                    return name.toLowerCase().includes(e.target.value.toLowerCase());
+                  });
 
-                    this.setState({
-                      searchOps: e.target.value,
-                      serviceOpsMetrics: filteredData,
-                    });
-                  }}
-                />
-              </Col>
-            </Row>
-            <Row>
-              <OperationTableDetails
-                loading={metrics.operationMetricsLoading}
-                error={metrics.opsError}
-                data={
-                  this.state.serviceOpsMetrics === undefined
-                    ? metrics.serviceOpsMetrics
-                    : this.state.serviceOpsMetrics
-                }
-                endTime={this.endTime}
-                lookback={selectedTimeFrame}
-                serviceName={this.getSelectedService()}
+                  this.setState({
+                    searchOps: e.target.value,
+                    serviceOpsMetrics: filteredData,
+                  });
+
+                  trackSearchOperationDebounced(e.target.value);
+                }}
               />
-            </Row>
+            </Col>
+          </Row>
+          <Row>
+            <OperationTableDetails
+              loading={metrics.operationMetricsLoading}
+              error={metrics.opsError}
+              data={
+                this.state.serviceOpsMetrics === undefined
+                  ? metrics.serviceOpsMetrics
+                  : this.state.serviceOpsMetrics
+              }
+              endTime={this.endTime}
+              lookback={selectedTimeFrame}
+              serviceName={this.getSelectedService()}
+            />
           </Row>
         </div>
       </>
@@ -410,17 +464,14 @@ export function mapStateToProps(state: ReduxState): TReduxProps {
     services: services.services || [],
     servicesLoading: services.loading,
     metrics,
-    selectedService: serviceFormSelector(state, 'service') || store.get('lastAtmSearchService'),
-    selectedTimeFrame:
-      serviceFormSelector(state, 'timeframe') || store.get('lastAtmSearchTimeframe') || oneHourInMilliSeconds,
   };
 }
 
 export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  const { fetchServices, fetchAllServiceMetrics, fetchAggregatedServiceMetrics } = bindActionCreators<any>(
-    jaegerApiActions,
-    dispatch
-  );
+  const { fetchServices, fetchAllServiceMetrics, fetchAggregatedServiceMetrics } = bindActionCreators<
+    object,
+    any
+  >(jaegerApiActions, dispatch);
 
   return {
     fetchServices,
@@ -429,11 +480,4 @@ export function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchPro
   };
 }
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(
-  reduxForm({
-    form: 'serviceForm',
-  })(MonitorATMServicesViewImpl)
-);
+export default withRouteProps(connect(mapStateToProps, mapDispatchToProps)(MonitorATMServicesViewImpl));

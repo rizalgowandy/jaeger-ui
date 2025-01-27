@@ -16,12 +16,12 @@ import * as React from 'react';
 import cx from 'classnames';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
 import _isEqual from 'lodash/isEqual';
 
 // import { History as RouterHistory, Location } from 'history';
 
 import memoizeOne from 'memoize-one';
+import { Location, History } from 'history';
 import { actions } from './duck';
 import ListView from './ListView';
 import SpanBarRow from './SpanBarRow';
@@ -32,6 +32,7 @@ import {
   findServerChildSpan,
   isErrorSpan,
   isKindClient,
+  isKindProducer,
   spanContainsErredSpan,
   ViewedBoundsFunctionType,
 } from './utils';
@@ -40,12 +41,13 @@ import { extractUiFindFromState, TExtractUiFindFromStateReturn } from '../../com
 import getLinks from '../../../model/link-patterns';
 import colorGenerator from '../../../utils/color-generator';
 import { TNil, ReduxState } from '../../../types';
-import { Log, Span, Trace, KeyValuePair } from '../../../types/trace';
+import { Log, Span, Trace, KeyValuePair, criticalPathSection } from '../../../types/trace';
 import TTraceTimeline from '../../../types/TTraceTimeline';
 
 import './VirtualizedTraceView.css';
 import updateUiFind from '../../../utils/update-ui-find';
 import { PEER_SERVICE } from '../../../constants/tag-keys';
+import withRouteProps from '../../../utils/withRouteProps';
 
 type RowState = {
   isDetail: boolean;
@@ -59,6 +61,7 @@ type TVirtualizedTraceViewOwnProps = {
   scrollToFirstVisibleSpan: () => void;
   registerAccessors: (accesors: Accessors) => void;
   trace: Trace;
+  criticalPath: criticalPathSection[];
 };
 
 type TDispatchProps = {
@@ -76,11 +79,16 @@ type TDispatchProps = {
   focusUiFindMatches: (trace: Trace, uiFind: string | TNil, allowHide?: boolean) => void;
 };
 
+type RouteProps = {
+  location: Location;
+  history: History;
+};
+
 type VirtualizedTraceViewProps = TVirtualizedTraceViewOwnProps &
   TDispatchProps &
   TExtractUiFindFromStateReturn &
   TTraceTimeline &
-  RouteComponentProps;
+  RouteProps;
 
 // export for tests
 export const DEFAULT_HEIGHTS = {
@@ -148,6 +156,44 @@ function getCssClasses(currentViewRange: [number, number]) {
     'clipping-left': zoomStart > 0,
     'clipping-right': zoomEnd < 1,
   });
+}
+
+function mergeChildrenCriticalPath(
+  trace: Trace,
+  spanID: string,
+  criticalPath: criticalPathSection[]
+): criticalPathSection[] {
+  if (!criticalPath) {
+    return [];
+  }
+  // Define an array to store the IDs of the span and its descendants (if the span is collapsed)
+  const allRequiredSpanIds = [spanID];
+
+  // If the span is collapsed, recursively find all of its descendants.
+  const findAllDescendants = (currentChildSpanIds: string[]) => {
+    currentChildSpanIds.forEach(eachId => {
+      const currentChildSpan = trace.spans.find(a => a.spanID === eachId)!;
+      if (currentChildSpan.hasChildren) {
+        allRequiredSpanIds.push(...currentChildSpan.childSpanIds);
+        findAllDescendants(currentChildSpan.childSpanIds);
+      }
+    });
+  };
+  findAllDescendants(allRequiredSpanIds);
+
+  const criticalPathSections: criticalPathSection[] = [];
+  criticalPath.forEach(each => {
+    if (allRequiredSpanIds.includes(each.spanId)) {
+      if (criticalPathSections.length !== 0 && each.section_end === criticalPathSections[0].section_start) {
+        // Merge Critical Paths if they are consecutive
+        criticalPathSections[0].section_start = each.section_start;
+      } else {
+        criticalPathSections.unshift({ ...each });
+      }
+    }
+  });
+
+  return criticalPathSections;
 }
 
 const memoizedGenerateRowStates = memoizeOne(generateRowStatesFromTrace);
@@ -316,16 +362,19 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     return DEFAULT_HEIGHTS.detail;
   };
 
-  linksGetter = (span: Span, items: KeyValuePair[], itemIndex: number) => getLinks(span, items, itemIndex);
+  linksGetter = (span: Span, items: KeyValuePair[], itemIndex: number) => {
+    const { trace } = this.props;
+    return getLinks(span, items, itemIndex, trace);
+  };
 
-  renderRow = (key: string, style: React.CSSProperties, index: number, attrs: {}) => {
+  renderRow = (key: string, style: React.CSSProperties, index: number, attrs: object) => {
     const { isDetail, span, spanIndex } = this.getRowStates()[index];
     return isDetail
       ? this.renderSpanDetailRow(span, key, style, attrs)
       : this.renderSpanBarRow(span, spanIndex, key, style, attrs);
   };
 
-  renderSpanBarRow(span: Span, spanIndex: number, key: string, style: React.CSSProperties, attrs: {}) {
+  renderSpanBarRow(span: Span, spanIndex: number, key: string, style: React.CSSProperties, attrs: object) {
     const { spanID } = span;
     const { serviceName } = span.process;
     const {
@@ -336,6 +385,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
       findMatchesIDs,
       spanNameColumnWidth,
       trace,
+      criticalPath,
     } = this.props;
     // to avert flow error
     if (!trace) {
@@ -346,7 +396,9 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     const isDetailExpanded = detailStates.has(spanID);
     const isMatchingFilter = findMatchesIDs ? findMatchesIDs.has(spanID) : false;
     const showErrorIcon = isErrorSpan(span) || (isCollapsed && spanContainsErredSpan(trace.spans, spanIndex));
-
+    const criticalPathSections = isCollapsed
+      ? mergeChildrenCriticalPath(trace, spanID, criticalPath)
+      : criticalPath.filter(each => each.spanId === spanID);
     // Check for direct child "server" span if the span is a "client" span.
     let rpc = null;
     if (isCollapsed) {
@@ -366,7 +418,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     // Leaf, kind == client and has peer.service tag, is likely a client span that does a request
     // to an uninstrumented/external service
     let noInstrumentedServer = null;
-    if (!span.hasChildren && peerServiceKV && isKindClient(span)) {
+    if (!span.hasChildren && peerServiceKV && (isKindClient(span) || isKindProducer(span))) {
       noInstrumentedServer = {
         serviceName: peerServiceKV.value,
         color: colorGenerator.getColorByKey(peerServiceKV.value),
@@ -378,6 +430,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
         <SpanBarRow
           className={this.getClippingCssClasses()}
           color={color}
+          criticalPath={criticalPathSections}
           columnDivision={spanNameColumnWidth}
           isChildrenExpanded={!isCollapsed}
           isDetailExpanded={isDetailExpanded}
@@ -397,7 +450,7 @@ export class VirtualizedTraceViewImpl extends React.Component<VirtualizedTraceVi
     );
   }
 
-  renderSpanDetailRow(span: Span, key: string, style: React.CSSProperties, attrs: {}) {
+  renderSpanDetailRow(span: Span, key: string, style: React.CSSProperties, attrs: object) {
     const { spanID } = span;
     const { serviceName } = span.process;
     const {
@@ -469,17 +522,15 @@ function mapStateToProps(state: ReduxState): TTraceTimeline & TExtractUiFindFrom
 
 /* istanbul ignore next */
 function mapDispatchToProps(dispatch: Dispatch<ReduxState>): TDispatchProps {
-  return (bindActionCreators(actions, dispatch) as any) as TDispatchProps;
+  return bindActionCreators(actions, dispatch) as any as TDispatchProps;
 }
 
-export default withRouter(
-  connect<
-    TTraceTimeline & TExtractUiFindFromStateReturn,
-    TDispatchProps,
-    TVirtualizedTraceViewOwnProps,
-    ReduxState
-  >(
-    mapStateToProps,
-    mapDispatchToProps
-  )(VirtualizedTraceViewImpl)
-);
+export default connect<
+  TTraceTimeline & TExtractUiFindFromStateReturn,
+  TDispatchProps,
+  TVirtualizedTraceViewOwnProps,
+  ReduxState
+>(
+  mapStateToProps,
+  mapDispatchToProps
+)(withRouteProps(VirtualizedTraceViewImpl));

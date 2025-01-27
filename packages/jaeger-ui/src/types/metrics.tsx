@@ -23,14 +23,16 @@ export type AvailableOpsMetrics =
   | 'service_operation_latencies'
   | 'service_operation_error_rate';
 
+export type spanKinds = 'unspecified' | 'internal' | 'server' | 'client' | 'producer' | 'consumer';
+
 export type MetricsAPIQueryParams = {
   quantile: number;
   groupByOperation?: boolean;
-  endTs?: number;
-  lookback?: number;
-  step?: number;
-  ratePer?: number;
-  spanKind?: 'unspecified' | 'internal' | 'server' | 'client' | 'producer' | 'consumer';
+  endTs: number;
+  lookback: number;
+  step: number;
+  ratePer: number;
+  spanKind: spanKinds;
 };
 
 export type LableObject = {
@@ -122,7 +124,7 @@ export type MetricsReduxState = {
   };
   isATMActivated: null | boolean;
   loading: boolean;
-  operationMetricsLoading: null | boolean;
+  operationMetricsLoading: undefined | boolean;
   serviceMetrics: ServiceMetrics | null;
   serviceOpsMetrics: ServiceOpsMetrics[] | undefined;
 };
@@ -139,7 +141,7 @@ export type PromiseFulfilledResult<T> = {
 
 export type PromiseRejectedResult = {
   status: PromiseStatus.rejected;
-  reason: any;
+  reason: ApiError;
 };
 
 export type FetchedAllServiceMetricsResponse = [
@@ -147,11 +149,11 @@ export type FetchedAllServiceMetricsResponse = [
   PromiseFulfilledResult<MetricsAPIServiceResponseData<'service_latencies', 0.75>> | PromiseRejectedResult,
   PromiseFulfilledResult<MetricsAPIServiceResponseData<'service_latencies'>> | PromiseRejectedResult,
   PromiseFulfilledResult<MetricsAPIServiceResponseData<'service_call_rate'>> | PromiseRejectedResult,
-  PromiseFulfilledResult<MetricsAPIServiceResponseData<'service_error_rate'>> | PromiseRejectedResult
+  PromiseFulfilledResult<MetricsAPIServiceResponseData<'service_error_rate'>> | PromiseRejectedResult,
 ];
 
 export type FetchAggregatedServiceMetricsResponse = [
   PromiseFulfilledResult<MetricsAPIOpsResponseData<'service_operation_latencies'>> | PromiseRejectedResult,
   PromiseFulfilledResult<MetricsAPIOpsResponseData<'service_operation_call_rate'>> | PromiseRejectedResult,
-  PromiseFulfilledResult<MetricsAPIOpsResponseData<'service_operation_error_rate'>> | PromiseRejectedResult
+  PromiseFulfilledResult<MetricsAPIOpsResponseData<'service_operation_error_rate'>> | PromiseRejectedResult,
 ];

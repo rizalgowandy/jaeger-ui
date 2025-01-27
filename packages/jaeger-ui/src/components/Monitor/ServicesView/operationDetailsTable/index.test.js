@@ -16,6 +16,7 @@ import React from 'react';
 import { mount, shallow } from 'enzyme';
 import OperationTableDetails from '.';
 import { originInitialState, serviceOpsMetrics } from '../../../../reducers/metrics.mock';
+import * as track from './index.track';
 
 const props = {
   data: originInitialState.serviceOpsMetrics,
@@ -152,16 +153,10 @@ describe('<OperationTableDetails>', () => {
     wrapper.setProps({ ...props, data: serviceOpsMetrics, loading: false });
     expect(wrapper.state('hoveredRowKey')).toBe(-1);
 
-    wrapper
-      .find('.table-row')
-      .at(0)
-      .simulate('mouseenter');
+    wrapper.find('.table-row').at(0).simulate('mouseenter');
     expect(wrapper.state('hoveredRowKey')).toBe(0);
 
-    wrapper
-      .find('.table-row')
-      .at(0)
-      .simulate('mouseleave');
+    wrapper.find('.table-row').at(0).simulate('mouseleave');
     expect(wrapper.state('hoveredRowKey')).toBe(-1);
   });
 
@@ -169,16 +164,10 @@ describe('<OperationTableDetails>', () => {
     wrapper.setProps({ ...props, data: serviceOpsMetrics, loading: false });
     expect(wrapper.state('hoveredRowKey')).toBe(-1);
 
-    wrapper
-      .find('.table-row')
-      .at(0)
-      .simulate('mouseenter');
+    wrapper.find('.table-row').at(0).simulate('mouseenter');
     expect(wrapper.state('hoveredRowKey')).toBe(0);
 
-    wrapper
-      .find('.table-row')
-      .at(0)
-      .simulate('mouseleave');
+    wrapper.find('.table-row').at(0).simulate('mouseleave');
     expect(wrapper.state('hoveredRowKey')).toBe(-1);
   });
 
@@ -232,71 +221,26 @@ describe('<OperationTableDetails>', () => {
 
     wrapper.setProps({ ...props, data, loading: false });
 
-    expect(
-      wrapper
-        .find('TableCell td')
-        .first()
-        .text()
-    ).toBe('/PlaceOrder');
+    expect(wrapper.find('td').first().text()).toBe('/PlaceOrder');
     // click on name
-    wrapper
-      .find('th Icon[type="caret-up"]')
-      .at(0)
-      .simulate('click');
-    expect(
-      wrapper
-        .find('TableCell td')
-        .first()
-        .text()
-    ).toBe('/Accounts');
+    wrapper.find('[aria-label="caret-up"]').at(0).simulate('click');
+    expect(wrapper.find('td').first().text()).toBe('/Accounts');
 
     // click on latencies
-    wrapper
-      .find('th Icon[type="caret-up"]')
-      .at(1)
-      .simulate('click');
-    expect(
-      wrapper
-        .find('TableCell td')
-        .first()
-        .text()
-    ).toBe('/PlaceOrder');
+    wrapper.find('[aria-label="caret-up"]').at(1).simulate('click');
+    expect(wrapper.find('td').first().text()).toBe('/PlaceOrder');
 
     // click on request
-    wrapper
-      .find('th Icon[type="caret-up"]')
-      .at(2)
-      .simulate('click');
-    expect(
-      wrapper
-        .find('TableCell td')
-        .first()
-        .text()
-    ).toBe('/Accounts');
+    wrapper.find('[aria-label="caret-up"]').at(2).simulate('click');
+    expect(wrapper.find('td').first().text()).toBe('/Accounts');
 
     // click on errors
-    wrapper
-      .find('th Icon[type="caret-up"]')
-      .at(3)
-      .simulate('click');
-    expect(
-      wrapper
-        .find('TableCell td')
-        .first()
-        .text()
-    ).toBe('/PlaceOrder');
+    wrapper.find('[aria-label="caret-up"]').at(3).simulate('click');
+    expect(wrapper.find('td').first().text()).toBe('/PlaceOrder');
 
     // click on errors
-    wrapper
-      .find('th Icon[type="caret-up"]')
-      .at(4)
-      .simulate('click');
-    expect(
-      wrapper
-        .find('TableCell td')
-        .first()
-        .text()
-    ).toBe('/Accounts');
+    wrapper.find('[aria-label="caret-up"]').at(4).simulate('click');
+    expect(wrapper.find('td').first().text()).toBe('/Accounts');
   });
 
   it('Graph avg label test', () => {
@@ -324,27 +268,35 @@ describe('<OperationTableDetails>', () => {
     wrapper.setProps({ ...props, data, loading: false });
 
     // Latency
-    expect(
-      wrapper
-        .find('div.table-graph-avg')
-        .at(0)
-        .text()
-    ).toBe('');
+    expect(wrapper.find('div.table-graph-avg').at(0).text()).toBe('');
 
     // Request rate
-    expect(
-      wrapper
-        .find('div.table-graph-avg')
-        .at(1)
-        .text()
-    ).toBe('');
+    expect(wrapper.find('div.table-graph-avg').at(1).text()).toBe('');
 
     // Error rate
-    expect(
-      wrapper
-        .find('div.table-graph-avg')
-        .at(2)
-        .text()
-    ).toBe('');
+    expect(wrapper.find('div.table-graph-avg').at(2).text()).toBe('');
+  });
+
+  it('Should track all events', async () => {
+    const trackSortOperationsSpy = jest.spyOn(track, 'trackSortOperations');
+    const trackViewTracesSpy = jest.spyOn(track, 'trackViewTraces');
+    const recordIndex = 0;
+
+    wrapper.setProps({ ...props, loading: false, data: serviceOpsMetrics });
+
+    // Hover on first line in the t able and display the button
+    wrapper.find('.ant-table-row.table-row').at(recordIndex).simulate('mouseenter');
+    wrapper.find({ children: 'View traces' }).first().simulate('click');
+
+    expect(trackViewTracesSpy).toHaveBeenCalledWith(serviceOpsMetrics[recordIndex].name);
+
+    wrapper.find('.ant-table-column-sorter-down').first().simulate('click');
+    expect(trackSortOperationsSpy).toHaveBeenCalledWith('Name');
+
+    wrapper.find('.ant-table-column-sorter-down').last().simulate('click');
+    expect(trackSortOperationsSpy).toHaveBeenCalledWith('Impact');
+
+    trackSortOperationsSpy.mockReset();
+    trackViewTracesSpy.mockReset();
   });
 });

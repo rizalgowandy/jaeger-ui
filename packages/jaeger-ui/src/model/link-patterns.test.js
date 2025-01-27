@@ -17,6 +17,7 @@ import {
   createTestFunction,
   getParameterInArray,
   getParameterInAncestor,
+  getParameterInTrace,
   processLinkPattern,
   computeLinks,
   createGetLinks,
@@ -141,7 +142,10 @@ describe('createTestFunction()', () => {
 });
 
 describe('getParameterInArray()', () => {
-  const data = [{ key: 'mykey', value: 'ok' }, { key: 'otherkey', value: 'v' }];
+  const data = [
+    { key: 'mykey', value: 'ok' },
+    { key: 'otherkey', value: 'v' },
+  ];
 
   it('returns an entry that is present', () => {
     expect(getParameterInArray('mykey', data)).toBe(data[0]);
@@ -214,12 +218,19 @@ describe('getParameterInAncestor()', () => {
           { key: 'd', value: 'd3' },
         ],
       },
-      tags: [{ key: 'a', value: 'a2' }, { key: 'b', value: 'b2' }, { key: 'c', value: 'c2' }],
+      tags: [
+        { key: 'a', value: 'a2' },
+        { key: 'b', value: 'b2' },
+        { key: 'c', value: 'c2' },
+      ],
     },
     {
       depth: 2,
       process: {
-        tags: [{ key: 'a', value: 'a1' }, { key: 'b', value: 'b1' }],
+        tags: [
+          { key: 'a', value: 'a1' },
+          { key: 'b', value: 'b1' },
+        ],
       },
       tags: [{ key: 'a', value: 'a0' }],
     },
@@ -296,6 +307,31 @@ describe('getParameterInAncestor()', () => {
   });
 });
 
+describe('getParameterInTrace()', () => {
+  const trace = {
+    processes: [],
+    traceName: 'theTrace',
+    traceID: 'trc1',
+    spans: [],
+    startTime: 1000,
+    endTime: 3000,
+    duration: 2000,
+    services: [],
+  };
+
+  it('returns an entry that is present', () => {
+    expect(getParameterInTrace('startTime', trace)).toEqual({ key: 'startTime', value: trace.startTime });
+  });
+
+  it('returns undefined when the entry cannot be found', () => {
+    expect(getParameterInTrace('someThingElse', trace)).toBeUndefined();
+  });
+
+  it('returns undefined when there is no trace', () => {
+    expect(getParameterInTrace('traceID')).toBeUndefined();
+  });
+});
+
 describe('computeTraceLink()', () => {
   const linkPatterns = [
     {
@@ -310,9 +346,13 @@ describe('computeTraceLink()', () => {
     },
     {
       type: 'traces',
-      url:
-        'http://example.com/?traceID=#{traceID}&traceName=#{traceName}&startTime=#{startTime}&endTime=#{endTime}&duration=#{duration}',
+      url: 'http://example.com/?traceID=#{traceID}&traceName=#{traceName}&startTime=#{startTime}&endTime=#{endTime}&duration=#{duration}',
       text: 'third link (#{traceID}, #{traceName}, #{startTime}, #{endTime}, #{duration})',
+    },
+    {
+      type: 'traces',
+      url: 'http://example.com/?startTime=#{startTime | epoch_micros_to_date_iso}&endTime=#{endTime | epoch_micros_to_date_iso}',
+      text: 'third link (#{startTime | epoch_micros_to_date_iso}, #{endTime | epoch_micros_to_date_iso})',
     },
   ].map(processLinkPattern);
 
@@ -322,7 +362,7 @@ describe('computeTraceLink()', () => {
     traceID: 'trc1',
     spans: [],
     startTime: 1000,
-    endTime: 3000,
+    endTime: 3000000000000,
     duration: 2000,
     services: [],
   };
@@ -334,8 +374,12 @@ describe('computeTraceLink()', () => {
         text: 'first link (trc1)',
       },
       {
-        url: 'http://example.com/?traceID=trc1&traceName=theTrace&startTime=1000&endTime=3000&duration=2000',
-        text: 'third link (trc1, theTrace, 1000, 3000, 2000)',
+        url: 'http://example.com/?traceID=trc1&traceName=theTrace&startTime=1000&endTime=3000000000000&duration=2000',
+        text: 'third link (trc1, theTrace, 1000, 3000000000000, 2000)',
+      },
+      {
+        text: 'third link (1970-01-01T00:00:00.001Z, 1970-02-04T17:20:00.000Z)',
+        url: 'http://example.com/?startTime=1970-01-01T00%3A00%3A00.001Z&endTime=1970-02-04T17%3A20%3A00.000Z',
       },
     ]);
   });
@@ -354,11 +398,28 @@ describe('computeLinks()', () => {
       url: 'http://example.com/?myKey=#{myOtherKey}&myKey=#{myKey}',
       text: 'second link (#{myOtherKey})',
     },
+    {
+      type: 'logs',
+      key: 'myThirdKey',
+      url: 'http://example.com/?myKey1=#{myKey}&myKey=#{myThirdKey}&traceID=#{trace.traceID}&startTime=#{trace.startTime}',
+      text: 'third link (#{myThirdKey}) for traceID - #{trace.traceID}',
+    },
   ].map(processLinkPattern);
 
   const spans = [
     { depth: 0, process: {}, tags: [{ key: 'myKey', value: 'valueOfMyKey' }] },
-    { depth: 1, process: {}, logs: [{ fields: [{ key: 'myOtherKey', value: 'valueOfMy+Other+Key' }] }] },
+    {
+      depth: 1,
+      process: {},
+      logs: [
+        {
+          fields: [
+            { key: 'myOtherKey', value: 'valueOfMy+Other+Key' },
+            { key: 'myThirdKey', value: 'valueOfThirdMyKey' },
+          ],
+        },
+      ],
+    },
   ];
   spans[1].references = [
     {
@@ -366,6 +427,17 @@ describe('computeLinks()', () => {
       span: spans[0],
     },
   ];
+
+  const trace = {
+    processes: [],
+    traceName: 'theTrace',
+    traceID: 'trc1',
+    spans: [],
+    startTime: 1000,
+    endTime: 3000,
+    duration: 2000,
+    services: [],
+  };
 
   it('correctly computes links', () => {
     expect(computeLinks(linkPatterns, spans[0], spans[0].tags, 0)).toEqual([
@@ -378,6 +450,12 @@ describe('computeLinks()', () => {
       {
         url: 'http://example.com/?myKey=valueOfMy%2BOther%2BKey&myKey=valueOfMyKey',
         text: 'second link (valueOfMy+Other+Key)',
+      },
+    ]);
+    expect(computeLinks(linkPatterns, spans[1], spans[1].logs[0].fields, 1, trace)).toEqual([
+      {
+        url: 'http://example.com/?myKey1=valueOfMyKey&myKey=valueOfThirdMyKey&traceID=trc1&startTime=1000',
+        text: 'third link (valueOfThirdMyKey) for traceID - trc1',
       },
     ]);
   });

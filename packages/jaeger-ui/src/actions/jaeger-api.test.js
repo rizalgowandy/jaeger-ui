@@ -13,17 +13,21 @@
 // limitations under the License.
 
 /* eslint-disable import/first */
-jest.mock('node-fetch', () => () =>
-  Promise.resolve({
-    status: 200,
-    data: () => Promise.resolve({ data: null }),
-    json: () => Promise.resolve({ data: null }),
-  })
+jest.mock(
+  'node-fetch',
+  () => () =>
+    Promise.resolve({
+      status: 200,
+      data: () => Promise.resolve({ data: null }),
+      json: () => Promise.resolve({ data: null }),
+    })
 );
 
-import sinon from 'sinon';
-import isPromise from 'is-promise';
+function isPromise(p) {
+  return p !== null && typeof p === 'object' && typeof p.then === 'function' && typeof p.catch === 'function';
+}
 
+import sinon from 'sinon';
 import * as jaegerApiActions from './jaeger-api';
 import JaegerAPI from '../api/jaeger';
 
@@ -111,19 +115,13 @@ describe('actions/jaeger-api', () => {
   });
 
   it('@JAEGER_API/FETCH_SERVICE_OPERATIONS should call the JaegerAPI', () => {
-    const called = mock
-      .expects('fetchServiceOperations')
-      .once()
-      .withExactArgs('service');
+    const called = mock.expects('fetchServiceOperations').once().withExactArgs('service');
     jaegerApiActions.fetchServiceOperations('service');
     expect(called.verify()).toBeTruthy();
   });
 
   it('@JAEGER_API/FETCH_SERVICE_SERVER_OP should call the JaegerAPI', () => {
-    const called = mock
-      .expects('fetchServiceServerOps')
-      .once()
-      .withExactArgs('service');
+    const called = mock.expects('fetchServiceServerOps').once().withExactArgs('service');
     jaegerApiActions.fetchServiceServerOps('service');
     expect(called.verify()).toBeTruthy();
   });
@@ -176,22 +174,5 @@ describe('actions/jaeger-api', () => {
     mock.expects('fetchMetrics');
     jaegerApiActions.fetchAggregatedServiceMetrics('serviceName', query);
     expect(() => mock.verify()).not.toThrow();
-  });
-});
-
-describe('allSettled', () => {
-  it('validate responses', async () => {
-    const res = await jaegerApiActions.allSettled([
-      Promise.resolve(1),
-      // eslint-disable-next-line prefer-promise-reject-errors
-      Promise.reject(2),
-      Promise.resolve(3),
-    ]);
-
-    expect(res).toEqual([
-      { status: 'fulfilled', value: 1 },
-      { status: 'rejected', reason: 2 },
-      { status: 'fulfilled', value: 3 },
-    ]);
   });
 });

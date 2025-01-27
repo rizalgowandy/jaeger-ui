@@ -16,16 +16,11 @@ exports[`<NameSelector> clear renders with clear icon when not required and with
       value="foo"
     />
   }
-  mouseEnterDelay={0.1}
-  mouseLeaveDelay={0.1}
-  onVisibleChange={[Function]}
+  onOpenChange={[Function]}
+  open={false}
   overlayClassName="NameSelector--overlay u-rm-popover-content-padding"
-  overlayStyle={Object {}}
   placement="bottomLeft"
-  prefixCls="ant-popover"
-  transitionName="zoom-big"
   trigger="click"
-  visible={false}
 >
   <h2
     className="NameSelector"
@@ -39,15 +34,13 @@ exports[`<NameSelector> clear renders with clear icon when not required and with
     <BreakableText
       className="NameSelector--value"
       text="foo"
-      wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
     />
     <IoChevronDown
       className="NameSelector--chevron"
     />
-    <Icon
+    <IoClose
       className="NameSelector--clearIcon"
       onClick={[Function]}
-      type="close"
     />
   </h2>
 </Popover>
@@ -69,16 +62,11 @@ exports[`<NameSelector> renders with is-invalid when required and without a valu
       value={null}
     />
   }
-  mouseEnterDelay={0.1}
-  mouseLeaveDelay={0.1}
-  onVisibleChange={[Function]}
+  onOpenChange={[Function]}
+  open={false}
   overlayClassName="NameSelector--overlay u-rm-popover-content-padding"
-  overlayStyle={Object {}}
   placement="bottomLeft"
-  prefixCls="ant-popover"
-  transitionName="zoom-big"
   trigger="click"
-  visible={false}
 >
   <h2
     className="NameSelector is-invalid"
@@ -86,7 +74,6 @@ exports[`<NameSelector> renders with is-invalid when required and without a valu
     <BreakableText
       className="NameSelector--value"
       text="This is the placeholder"
-      wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
     />
     <IoChevronDown
       className="NameSelector--chevron"
@@ -111,16 +98,11 @@ exports[`<NameSelector> renders without exploding 1`] = `
       value={null}
     />
   }
-  mouseEnterDelay={0.1}
-  mouseLeaveDelay={0.1}
-  onVisibleChange={[Function]}
+  onOpenChange={[Function]}
+  open={false}
   overlayClassName="NameSelector--overlay u-rm-popover-content-padding"
-  overlayStyle={Object {}}
   placement="bottomLeft"
-  prefixCls="ant-popover"
-  transitionName="zoom-big"
   trigger="click"
-  visible={false}
 >
   <h2
     className="NameSelector is-invalid"
@@ -128,7 +110,6 @@ exports[`<NameSelector> renders without exploding 1`] = `
     <BreakableText
       className="NameSelector--value"
       text="This is the placeholder"
-      wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
     />
     <IoChevronDown
       className="NameSelector--chevron"
@@ -153,16 +134,11 @@ exports[`<NameSelector> renders without is-invalid when not required and without
       value={null}
     />
   }
-  mouseEnterDelay={0.1}
-  mouseLeaveDelay={0.1}
-  onVisibleChange={[Function]}
+  onOpenChange={[Function]}
+  open={false}
   overlayClassName="NameSelector--overlay u-rm-popover-content-padding"
-  overlayStyle={Object {}}
   placement="bottomLeft"
-  prefixCls="ant-popover"
-  transitionName="zoom-big"
   trigger="click"
-  visible={false}
 >
   <h2
     className="NameSelector"
@@ -170,7 +146,6 @@ exports[`<NameSelector> renders without is-invalid when not required and without
     <BreakableText
       className="NameSelector--value"
       text="This is the placeholder"
-      wordRegexp={/\\\\W\\*\\\\w\\+\\\\W\\*/g}
     />
     <IoChevronDown
       className="NameSelector--chevron"

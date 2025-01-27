@@ -2,16 +2,13 @@
 
 exports[`<FileLoader /> matches the snapshot 1`] = `
 <Dragger
-  accept=".json"
+  accept=".json,.jsonl"
+  beforeUpload={[Function]}
   multiple={true}
 >
-  <p
-    className="ant-upload-drag-icon"
-  >
-    <Icon
-      type="file-add"
-    />
-  </p>
+  <IoDocumentAttachOutline
+    className="Dragger--icon"
+  />
   <p
     className="ant-upload-text"
   >

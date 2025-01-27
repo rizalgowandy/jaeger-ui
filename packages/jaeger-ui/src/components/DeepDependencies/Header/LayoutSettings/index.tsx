@@ -14,8 +14,8 @@
 
 import * as React from 'react';
 import { Checkbox, Popover, Radio } from 'antd';
-import { CheckboxChangeEvent } from 'antd/lib/checkbox';
-import { RadioChangeEvent } from 'antd/lib/radio';
+import { CheckboxChangeEvent } from 'antd/es/checkbox';
+import { RadioChangeEvent } from 'antd/es/radio';
 
 import settingsIcon from './settingsIcon';
 import ChevronDown from '../ChevronDown';
@@ -73,10 +73,27 @@ export const densityOptions = [
 ];
 
 export default class LayoutSettings extends React.PureComponent<TProps> {
+  componentDidMount() {
+    // Check local storage for previously selected density
+    const storedDensity = localStorage.getItem(LayoutSettings.STORED_DENSITY_KEY);
+    if (storedDensity && densityOptions.some(option => option.option === storedDensity)) {
+      // Set the stored density as the default if it's a valid option
+      this.props.setDensity(storedDensity as EDdgDensity);
+    }
+  }
+
+  // key used to store density selection in local storage
+  private static readonly STORED_DENSITY_KEY = 'ddg.layout.density';
+
   private updateDensity = (event: RadioChangeEvent) => {
     const { density: prevDensity } = this.props;
     const { value: nextDensity } = event.target;
+
     if (prevDensity === nextDensity) return;
+
+    // Save the selected density in local storage
+    localStorage.setItem(LayoutSettings.STORED_DENSITY_KEY, nextDensity);
+
     trackDensityChange(prevDensity, nextDensity, densityOptions);
     this.props.setDensity(nextDensity);
   };

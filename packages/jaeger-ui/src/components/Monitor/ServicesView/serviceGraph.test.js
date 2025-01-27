@@ -25,6 +25,7 @@ const props = {
   loading: true,
   marginClassName: '',
   crosshairValues: [],
+  xDomain: [1, 2],
 };
 
 describe('<ServiceGraph>', () => {
@@ -39,6 +40,11 @@ describe('<ServiceGraph>', () => {
   });
 
   it('Loading indicator is displayed', () => {
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it('Loading indicator is displayed when xDomain is empty', () => {
+    wrapper.setProps({ ...props, xDomain: [], loading: false });
     expect(wrapper).toMatchSnapshot();
   });
 
@@ -127,10 +133,7 @@ describe('<ServiceGraph>', () => {
       loading: false,
       metricsData: serviceMetrics.service_call_rate,
     });
-    wrapper
-      .find('AreaSeries')
-      .at(0)
-      .prop('onNearestX')({ x: 1, y: 2 }, { index: 7 });
+    wrapper.find('AreaSeries').at(0).prop('onNearestX')({ x: 1, y: 2 }, { index: 7 });
     expect(wrapper.state().crosshairValues).toEqual([{ label: 0.95 }]);
     wrapper.find('XYPlot').prop('onMouseLeave')();
     expect(wrapper.state().crosshairValues).toEqual([]);

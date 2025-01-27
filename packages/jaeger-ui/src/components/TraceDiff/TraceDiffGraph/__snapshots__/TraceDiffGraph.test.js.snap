@@ -66,11 +66,20 @@ exports[`TraceDiffGraph renders a DiGraph when it has data 1`] = `
     measurableNodesKey="nodes"
     minimap={true}
     minimapClassName="u-miniMap"
-    setOnGraph={[Function]}
+    setOnGraph={
+      Array [
+        [Function],
+        Object {
+          "style": Object {
+            "position": "static",
+          },
+        },
+      ]
+    }
     vertices={Array []}
     zoom={true}
   />
-  <withRouter(Connect(UnconnectedUiFindInput))
+  <Connect(WithRouteProps)
     inputProps={
       Object {
         "className": "TraceDiffGraph--uiFind",

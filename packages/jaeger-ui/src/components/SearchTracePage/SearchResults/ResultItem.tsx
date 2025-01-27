@@ -14,12 +14,14 @@
 
 import * as React from 'react';
 import { Col, Divider, Row, Tag } from 'antd';
+import { LocationDescriptor } from 'history';
 import { Link } from 'react-router-dom';
 
-import { sortBy } from 'lodash';
-import moment from 'moment';
+import _sortBy from 'lodash/sortBy';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
 
-import IoAlert from 'react-icons/lib/io/alert';
+import { IoAlert } from 'react-icons/io5';
 
 import { trackConversions, EAltViewActions } from './index.track';
 import * as markers from './ResultItem.markers';
@@ -31,10 +33,12 @@ import { KeyValuePair, Trace } from '../../../types/trace';
 
 import './ResultItem.css';
 
+dayjs.extend(relativeTime);
+
 type Props = {
   durationPercent: number;
   isInDiffCohort: boolean;
-  linkTo: string;
+  linkTo: LocationDescriptor;
   toggleComparison: (traceID: string) => void;
   trace: Trace;
   disableComparision: boolean;
@@ -48,7 +52,8 @@ type State = {
   fromNow: string | boolean;
 };
 
-const isErrorTag = ({ key, value }: KeyValuePair) => key === 'error' && (value === true || value === 'true');
+const isErrorTag = ({ key, value }: KeyValuePair<boolean | string>) =>
+  key === 'error' && (value === true || value === 'true');
 const trackTraceConversions = () => trackConversions(EAltViewActions.Traces);
 
 export default class ResultItem extends React.PureComponent<Props, State> {
@@ -56,7 +61,7 @@ export default class ResultItem extends React.PureComponent<Props, State> {
     super(props, state);
     const { startTime, spans } = props.trace;
 
-    const mDate = moment(startTime / 1000);
+    const startTimeDayjs = dayjs(startTime / 1000);
 
     const erroredServices: Set<string> = new Set<string>();
 
@@ -70,22 +75,16 @@ export default class ResultItem extends React.PureComponent<Props, State> {
 
     this.state = {
       numSpans: spans.length,
-      timeStr: mDate.format('h:mm:ss a'),
-      fromNow: mDate.fromNow(),
+      timeStr: startTimeDayjs.format('h:mm:ss a'),
+      fromNow: startTimeDayjs.fromNow(),
       numErredSpans,
       erroredServices,
     };
   }
 
   render() {
-    const {
-      disableComparision,
-      durationPercent,
-      isInDiffCohort,
-      linkTo,
-      toggleComparison,
-      trace,
-    } = this.props;
+    const { disableComparision, durationPercent, isInDiffCohort, linkTo, toggleComparison, trace } =
+      this.props;
     const { duration, services, startTime, traceName, traceID } = trace;
     return (
       <div className="ResultItem" onClick={trackTraceConversions} role="button">
@@ -113,7 +112,7 @@ export default class ResultItem extends React.PureComponent<Props, State> {
             </Col>
             <Col span={16} className="ub-p2">
               <ul className="ub-list-reset" data-test={markers.SERVICE_TAGS}>
-                {sortBy(services, s => s.name).map(service => {
+                {_sortBy(services, s => s.name).map(service => {
                   const { name, numberOfSpans: count } = service;
                   return (
                     <li key={name} className="ub-inline-block ub-m1">

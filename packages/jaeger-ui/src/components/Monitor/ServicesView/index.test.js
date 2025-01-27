@@ -20,6 +20,8 @@ import {
   mapDispatchToProps,
   getLoopbackInterval,
   yAxisTickFormat,
+  timeFrameOptions,
+  spanKindOptions,
 } from '.';
 import LoadingIndicator from '../../common/LoadingIndicator';
 import MonitorATMEmptyState from '../EmptyState';
@@ -30,6 +32,7 @@ import {
   serviceOpsMetrics,
   serviceMetricsWithOneServiceLatency,
 } from '../../../reducers/metrics.mock';
+import * as track from './index.track';
 
 const state = {
   services: {},
@@ -40,12 +43,14 @@ const state = {
 const props = mapStateToProps(state);
 
 Date.now = jest.fn(() => 1487076708000); // Tue, 14 Feb 2017 12:51:48 GMT'
+jest.mock('lodash/debounce', () => fn => fn);
 
 describe('<MonitorATMServicesView>', () => {
   let wrapper;
   const mockFetchServices = jest.fn();
   const mockFetchAllServiceMetrics = jest.fn();
   const mockFetchAggregatedServiceMetrics = jest.fn();
+
   beforeAll(() => {
     Date.now = jest.fn(() => 1466424490000);
   });
@@ -202,9 +207,7 @@ describe('<MonitorATMServicesView>', () => {
 
   it('should update state after choosing a new timeframe', () => {
     const firstGraphXDomain = wrapper.state().graphXDomain;
-    wrapper.setProps({
-      selectedTimeFrame: 3600000 * 2,
-    });
+    wrapper.instance().handleTimeFrameChange(3600000 * 2);
 
     expect(wrapper.state().graphXDomain).not.toBe(firstGraphXDomain);
   });
@@ -246,12 +249,7 @@ describe('<MonitorATMServicesView>', () => {
         },
       },
     });
-    expect(
-      wrapper
-        .find(ServiceGraph)
-        .first()
-        .prop('error')
-    ).toBeNull();
+    expect(wrapper.find(ServiceGraph).first().prop('error')).toBeNull();
 
     wrapper.setProps({
       services: ['s1', 's2'],
@@ -269,12 +267,7 @@ describe('<MonitorATMServicesView>', () => {
         },
       },
     });
-    expect(
-      wrapper
-        .find(ServiceGraph)
-        .first()
-        .prop('error')
-    ).toBeNull();
+    expect(wrapper.find(ServiceGraph).first().prop('error')).toBeNull();
 
     wrapper.setProps({
       services: ['s1', 's2'],
@@ -292,17 +285,49 @@ describe('<MonitorATMServicesView>', () => {
         },
       },
     });
-    expect(
-      wrapper
-        .find(ServiceGraph)
-        .first()
-        .prop('error')
-    ).not.toBeNull();
+    expect(wrapper.find(ServiceGraph).first().prop('error')).not.toBeNull();
+  });
+
+  it('Should track all events', () => {
+    const trackSelectServiceSpy = jest.spyOn(track, 'trackSelectService');
+    const trackViewAllTracesSpy = jest.spyOn(track, 'trackViewAllTraces');
+    const trackSelectSpanKindSpy = jest.spyOn(track, 'trackSelectSpanKind');
+    const trackSelectTimeframeSpy = jest.spyOn(track, 'trackSelectTimeframe');
+    const trackSearchOperationSpy = jest.spyOn(track, 'trackSearchOperation');
+
+    const newValue = 'newValue';
+    const [spanKindOption] = spanKindOptions;
+    const [timeFrameOption] = timeFrameOptions;
+
+    wrapper.setProps({
+      metrics: { ...originInitialState, serviceOpsMetrics },
+    });
+
+    wrapper.find('Search').simulate('change', { target: { value: newValue } });
+    expect(trackSearchOperationSpy).toHaveBeenCalledWith(newValue);
+
+    wrapper.find('SearchableSelect').first().prop('onChange')(newValue);
+    expect(trackSelectServiceSpy).toHaveBeenCalledWith(newValue);
+
+    wrapper.find('.span-kind-selector').prop('onChange')(spanKindOption.value);
+    expect(trackSelectSpanKindSpy).toHaveBeenCalledWith(spanKindOption.label);
+
+    wrapper.find('SearchableSelect').last().prop('onChange')(timeFrameOption.value);
+    expect(trackSelectTimeframeSpy).toHaveBeenCalledWith(timeFrameOption.label);
+
+    wrapper.find({ children: 'View all traces' }).simulate('click');
+    expect(trackViewAllTracesSpy).toHaveBeenCalled();
+
+    trackSelectServiceSpy.mockReset();
+    trackViewAllTracesSpy.mockReset();
+    trackSelectSpanKindSpy.mockReset();
+    trackSelectTimeframeSpy.mockReset();
+    trackSearchOperationSpy.mockReset();
   });
 });
 
 describe('<MonitorATMServicesView> on page switch', () => {
-  // eslint-disable-next-line no-unused-vars
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   let wrapper;
   const stateOnPageSwitch = {
     services: {
@@ -340,8 +365,6 @@ describe('mapStateToProps()', () => {
     expect(mapStateToProps(state)).toEqual({
       metrics: originInitialState,
       services: [],
-      selectedService: 's1',
-      selectedTimeFrame: 3600000,
     });
   });
 });

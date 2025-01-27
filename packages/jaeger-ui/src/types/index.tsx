@@ -40,8 +40,13 @@ export type FetchedTrace = {
   state?: FetchedState;
 };
 
+export type LocationState = {
+  fromSearch?: string;
+};
+
 export type ReduxState = {
   archive: TracesArchive;
+  type: string;
   config: Config;
   ddg: TDdgState;
   dependencies: {
@@ -51,10 +56,10 @@ export type ReduxState = {
   };
   embedded: EmbeddedState;
   router: Router & {
-    location: Location;
+    location: Location<LocationState>;
   };
   services: {
-    services: (string[]) | TNil;
+    services: string[] | TNil;
     serverOpsForService: Record<string, string[]>;
     operationsForService: Record<string, string[]>;
     loading: boolean;
